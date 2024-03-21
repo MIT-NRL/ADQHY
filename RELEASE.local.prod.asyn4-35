@@ -1,0 +1,18 @@
+#Only put common modules in here that will typicaly use a consistent release set.
+
+EPICS_BASE=/home/controls/prod/epics/base/rel3.14.12.6_20170606
+EXTENSIONS=/home/controls/prod/epics/extensions/rel1.3_20170606
+
+ACCESSSECURITY=/home/controls/prod/epics/AccessSecurity/rel1.8_20190404
+ASYN=/home/controls/prod/epics/asyn/rel4-35_20190418
+AUTOSAVE=/home/controls/prod/epics/autosave/rel5-5_20170606
+BUSY=/home/controls/prod/epics/busy/rel1-6_20190520
+CALC=/home/controls/prod/epics/calc/rel3-6-1_20170606
+DEVIOCSTATS=/home/controls/prod/epics/devIocStats/rel3.1.12_20170606
+SNCSEQ=/home/controls/prod/epics/seq/rel2-0-14_20170606
+SSCAN=/home/controls/prod/epics/sscan/rel2-9_20170606
+STREAMDEVICE=/home/controls/prod/epics/StreamDevice/rel2.8.8_SNS1_20190521
+
+
+
+

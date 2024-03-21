@@ -1,0 +1,1635 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>$(S) QHY</name>
+  <macros>
+    <ARRAY>$(QHY_NAME):Array1:</ARRAY>
+    <P>CG1D:Det:</P>
+    <R>$(QHY_NAME):</R>
+    <ROI>$(QHY_NAME):ROI1:</ROI>
+    <STAT>$(QHY_NAME):Stats1:</STAT>
+    <TIFF>$(QHY_NAME):TIFF1:</TIFF>
+    <TRAN>$(QHY_NAME):Trans1:</TRAN>
+  </macros>
+  <width>1400</width>
+  <height>1100</height>
+  <actions>
+  </actions>
+  <grid_step_x>5</grid_step_x>
+  <grid_step_y>5</grid_step_y>
+  <widget type="group" version="2.0.0">
+    <name>Camera Control</name>
+    <x>5</x>
+    <y>10</y>
+    <width>361</width>
+    <height>570</height>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <actions>
+    </actions>
+    <widget type="label" version="2.0.0">
+      <name>Label</name>
+      <text>Exposure Time</text>
+      <x>2</x>
+      <y>2</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>Action Button</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>$(pv_name)</pv_name>
+          <value>0</value>
+        </action>
+      </actions>
+      <pv_name>$(P)$(R)Acquire</pv_name>
+      <text>Stop</text>
+      <x>229</x>
+      <y>397</y>
+      <width>90</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <rules>
+        <rule name="EnabledRule" prop_id="enabled" out_exp="false">
+          <exp bool_exp="pv0==0">
+            <value>false</value>
+          </exp>
+          <exp bool_exp="pv0!=0">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)DetectorState_RBV</pv_name>
+        </rule>
+      </rules>
+      <tooltip>Stop Acquisition $(pv_name)</tooltip>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>Action Button</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>$(pv_name)</pv_name>
+          <value>1</value>
+        </action>
+      </actions>
+      <pv_name>$(P)$(R)Acquire</pv_name>
+      <text>Start</text>
+      <x>134</x>
+      <y>397</y>
+      <width>90</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <rules>
+        <rule name="EnabledRule" prop_id="enabled" out_exp="false">
+          <exp bool_exp="(pv0!=0)&amp;&amp;(pv0!=6)&amp;&amp;(pv0!=10)">
+            <value>false</value>
+          </exp>
+          <pv_name>$(P)$(R)DetectorState_RBV</pv_name>
+        </rule>
+      </rules>
+      <tooltip>Start Acqusition $(pv_name)</tooltip>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ExposureTime</name>
+      <pv_name>$(P)$(R)AcquireTime</pv_name>
+      <x>132</x>
+      <y>2</y>
+      <width>90</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_6</name>
+      <text>Camera Status</text>
+      <x>2</x>
+      <y>432</y>
+      <width>127</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(R)DetectorState_RBV</pv_name>
+      <x>134</x>
+      <y>432</y>
+      <width>185</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(R)ReadoutMode_RBV</pv_name>
+      <x>227</x>
+      <y>78</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label</name>
+      <text>Binning</text>
+      <x>2</x>
+      <y>78</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(R)AcquireTime_RBV</pv_name>
+      <x>227</x>
+      <y>2</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>Menu Button</name>
+      <pv_name>$(P)$(R)ReadoutMode</pv_name>
+      <x>132</x>
+      <y>78</y>
+      <width>90</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <items>
+        <item>null</item>
+      </items>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(R)StatusMessage_RBV</pv_name>
+      <x>134</x>
+      <y>502</y>
+      <width>185</width>
+      <height>30</height>
+      <format>6</format>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_6</name>
+      <text>Status Message</text>
+      <x>4</x>
+      <y>502</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="progressbar" version="2.0.0">
+      <name>Progress Bar</name>
+      <pv_name>$(P)$(R)PercentComplete_RBV</pv_name>
+      <x>134</x>
+      <y>467</y>
+      <width>185</width>
+      <height>30</height>
+      <fill_color>
+        <color name="Grid" red="128" green="128" blue="128">
+        </color>
+      </fill_color>
+      <actions>
+      </actions>
+      <rules>
+        <rule name="Color Rule" prop_id="fill_color" out_exp="false">
+          <exp bool_exp="pv0=100">
+            <value>
+              <color red="0" green="200" blue="0">
+              </color>
+            </value>
+          </exp>
+          <pv_name>$(P)$(R)PercentComplete_RBV</pv_name>
+        </rule>
+      </rules>
+      <limits_from_pv>false</limits_from_pv>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_6</name>
+      <text>Progress</text>
+      <x>4</x>
+      <y>467</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_3</name>
+      <text>Read Mode</text>
+      <x>2</x>
+      <y>42</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>Menu Button_1</name>
+      <pv_name>$(P)$(R)ReadMode</pv_name>
+      <x>132</x>
+      <y>42</y>
+      <width>90</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <items>
+        <item>null</item>
+      </items>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_1</name>
+      <pv_name>$(P)$(R)ReadMode_RBV</pv_name>
+      <x>227</x>
+      <y>42</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_4</name>
+      <text>Gain</text>
+      <x>2</x>
+      <y>113</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ExposureTime_1</name>
+      <pv_name>$(P)$(R)Gain</pv_name>
+      <x>132</x>
+      <y>113</y>
+      <width>90</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <format>1</format>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_3</name>
+      <pv_name>$(P)$(R)Gain_RBV</pv_name>
+      <x>227</x>
+      <y>113</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_5</name>
+      <text>Offset</text>
+      <x>2</x>
+      <y>148</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ExposureTime_2</name>
+      <pv_name>$(P)$(R)Offset</pv_name>
+      <x>132</x>
+      <y>148</y>
+      <width>90</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_4</name>
+      <pv_name>$(P)$(R)Offset_RBV</pv_name>
+      <x>227</x>
+      <y>148</y>
+      <width>90</width>
+      <height>30</height>
+      <format>1</format>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_7</name>
+      <text>Bit Depth</text>
+      <x>2</x>
+      <y>323</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>Menu Button_2</name>
+      <pv_name>$(P)$(R)BitDepth</pv_name>
+      <x>132</x>
+      <y>323</y>
+      <width>90</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <items>
+        <item>null</item>
+      </items>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_5</name>
+      <pv_name>$(P)$(R)BitDepth_RBV</pv_name>
+      <x>227</x>
+      <y>323</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_8</name>
+      <text>Min X</text>
+      <x>2</x>
+      <y>183</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_9</name>
+      <text>Min Y</text>
+      <x>2</x>
+      <y>218</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ExposureTime_3</name>
+      <pv_name>$(P)$(R)MinX</pv_name>
+      <x>132</x>
+      <y>183</y>
+      <width>90</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <format>1</format>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_6</name>
+      <pv_name>$(P)$(R)MinX_RBV</pv_name>
+      <x>227</x>
+      <y>183</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ExposureTime_4</name>
+      <pv_name>$(P)$(R)MinY</pv_name>
+      <x>132</x>
+      <y>218</y>
+      <width>90</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <format>1</format>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_7</name>
+      <pv_name>$(P)$(R)MinY_RBV</pv_name>
+      <x>227</x>
+      <y>218</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ExposureTime_5</name>
+      <pv_name>$(P)$(R)SizeX</pv_name>
+      <x>132</x>
+      <y>253</y>
+      <width>90</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <format>1</format>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_8</name>
+      <pv_name>$(P)$(R)SizeX_RBV</pv_name>
+      <x>227</x>
+      <y>253</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_11</name>
+      <text>Size Y</text>
+      <x>2</x>
+      <y>288</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ExposureTime_6</name>
+      <pv_name>$(P)$(R)SizeY</pv_name>
+      <x>132</x>
+      <y>288</y>
+      <width>90</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <format>1</format>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_9</name>
+      <pv_name>$(P)$(R)SizeY_RBV</pv_name>
+      <x>227</x>
+      <y>288</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_15</name>
+      <text>Size X</text>
+      <x>4</x>
+      <y>253</y>
+      <width>125</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+  </widget>
+  <widget type="group" version="2.0.0">
+    <x>365</x>
+    <y>10</y>
+    <width>910</width>
+    <height>850</height>
+    <actions>
+    </actions>
+    <widget type="image" version="2.0.0">
+      <name>Intensity Graph</name>
+      <pv_name>$(P)$(ARRAY)ArrayData</pv_name>
+      <width>800</width>
+      <height>800</height>
+      <color_map>
+        <name>GRAY</name>
+      </color_map>
+      <x_axis>
+        <visible>true</visible>
+        <title>X Axis</title>
+        <minimum>0.0</minimum>
+        <maximum>9576.0</maximum>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+      </x_axis>
+      <y_axis>
+        <visible>true</visible>
+        <title>Y Axis</title>
+        <minimum>0.0</minimum>
+        <maximum>6388.0</maximum>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+      </y_axis>
+      <actions>
+      </actions>
+      <rules>
+        <rule name="Maximum" prop_id="maximum" out_exp="true">
+          <exp bool_exp="true">
+            <expression>pv0</expression>
+          </exp>
+          <pv_name>$(P)$(R)ImageMaxOPI</pv_name>
+        </rule>
+        <rule name="SizeX" prop_id="data_width" out_exp="true">
+          <exp bool_exp="true">
+            <expression>pv0</expression>
+          </exp>
+          <pv_name>$(P)$(ARRAY)ArraySize0_RBV</pv_name>
+        </rule>
+        <rule name="SizeY" prop_id="data_height" out_exp="true">
+          <exp bool_exp="true">
+            <expression>pv0</expression>
+          </exp>
+          <pv_name>$(P)$(ARRAY)ArraySize1_RBV</pv_name>
+        </rule>
+        <rule name="AxisXMax" prop_id="x_axis.maximum" out_exp="true">
+          <exp bool_exp="true">
+            <expression>pv0</expression>
+          </exp>
+          <pv_name>$(P)$(ROI)ArraySize0_RBV</pv_name>
+        </rule>
+        <rule name="AxisYMax" prop_id="y_axis.maximum" out_exp="true">
+          <exp bool_exp="true">
+            <expression>pv0</expression>
+          </exp>
+          <pv_name>$(P)$(ROI)ArraySize1_RBV</pv_name>
+        </rule>
+      </rules>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <data_width>9577</data_width>
+      <data_height>6389</data_height>
+      <maximum>65536.0</maximum>
+    </widget>
+    <widget type="scaledslider" version="2.0.0">
+      <name>Scaled Slider</name>
+      <pv_name>$(P)$(R)ImageMaxOPI</pv_name>
+      <x>812</x>
+      <y>17</y>
+      <width>26</width>
+      <height>720</height>
+      <horizontal>false</horizontal>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <show_scale>false</show_scale>
+      <show_minor_ticks>false</show_minor_ticks>
+      <major_tick_step_hint>50</major_tick_step_hint>
+      <scale_format></scale_format>
+      <show_hihi>false</show_hihi>
+      <show_high>false</show_high>
+      <show_low>false</show_low>
+      <show_lolo>false</show_lolo>
+      <actions>
+      </actions>
+      <rules>
+        <rule name="Max Value" prop_id="maximum" out_exp="true">
+          <exp bool_exp="pv0">
+            <expression>pv0</expression>
+          </exp>
+          <pv_name>$(P)$(R)ImageMaxMaxOPI</pv_name>
+        </rule>
+      </rules>
+      <maximum>65536.0</maximum>
+      <limits_from_pv>false</limits_from_pv>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_12</name>
+      <text>Slide Max</text>
+      <x>774</x>
+      <y>742</y>
+      <width>85</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>Text Entry</name>
+      <pv_name>$(P)$(R)ImageMaxMaxOPI</pv_name>
+      <x>773</x>
+      <y>772</y>
+      <width>85</width>
+      <height>30</height>
+    </widget>
+  </widget>
+  <widget type="group" version="2.0.0">
+    <name>File Settings</name>
+    <x>365</x>
+    <y>860</y>
+    <width>910</width>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="Text_ForeGround" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="OPI_Background" red="255" green="255" blue="255">
+      </color>
+    </background_color>
+    <actions>
+    </actions>
+    <widget type="label" version="2.0.0">
+      <name>Label</name>
+      <text>File Name</text>
+      <x>17</x>
+      <y>47</y>
+      <width>104</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_1</name>
+      <text>File Path</text>
+      <x>12</x>
+      <y>12</y>
+      <width>109</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_2</name>
+      <text>Next File #</text>
+      <x>487</x>
+      <y>47</y>
+      <width>85</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>file_num</name>
+      <pv_name>$(P)$(TIFF)FileNumber_RBV</pv_name>
+      <x>672</x>
+      <y>47</y>
+      <width>85</width>
+      <height>30</height>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <format>1</format>
+      <show_units>false</show_units>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>Text Input_1</name>
+      <pv_name>$(P)$(TIFF)FilePath</pv_name>
+      <x>127</x>
+      <y>12</y>
+      <width>630</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label</name>
+      <text>Last File Name</text>
+      <x>7</x>
+      <y>82</y>
+      <width>115</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(TIFF)FullFileName_RBV</pv_name>
+      <x>127</x>
+      <y>82</y>
+      <width>630</width>
+      <height>30</height>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>filename_2</name>
+      <pv_name>$(P)$(TIFF)FileName</pv_name>
+      <x>127</x>
+      <y>47</y>
+      <width>265</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label</name>
+      <text>Write Status</text>
+      <x>12</x>
+      <y>117</y>
+      <width>110</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(TIFF)WriteStatus</pv_name>
+      <x>127</x>
+      <y>117</y>
+      <width>235</width>
+      <height>30</height>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(TIFF)WriteMessage</pv_name>
+      <x>502</x>
+      <y>117</y>
+      <width>255</width>
+      <height>30</height>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <name>LED</name>
+      <pv_name>$(P)$(TIFF)FilePathExists_RBV</pv_name>
+      <bit>0</bit>
+      <x>812</x>
+      <y>17</y>
+      <width>22</width>
+      <height>22</height>
+      <off_color>
+        <color name="Major" red="255" green="0" blue="0">
+        </color>
+      </off_color>
+      <on_color>
+        <color name="OK" red="0" green="255" blue="0">
+        </color>
+      </on_color>
+      <actions>
+      </actions>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(TIFF)WriteFile_RBV</pv_name>
+      <x>372</x>
+      <y>117</y>
+      <width>124</width>
+      <height>30</height>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>filename_2</name>
+      <pv_name>$(P)$(TIFF)FileNumber</pv_name>
+      <x>577</x>
+      <y>47</y>
+      <width>90</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <show_units>false</show_units>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="fileselector" version="2.0.0">
+      <pv_name>$(P)$(TIFF)FilePath</pv_name>
+      <component>1</component>
+      <x>762</x>
+      <y>12</y>
+      <height>30</height>
+    </widget>
+  </widget>
+  <widget type="group" version="2.0.0">
+    <name>Cooling</name>
+    <x>5</x>
+    <y>580</y>
+    <width>361</width>
+    <height>164</height>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <actions>
+    </actions>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(R)Temperature_RBV</pv_name>
+      <x>227</x>
+      <y>8</y>
+      <width>90</width>
+      <height>30</height>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <format>1</format>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label</name>
+      <text>Power</text>
+      <x>137</x>
+      <y>92</y>
+      <width>86</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_2</name>
+      <pv_name>$(P)$(R)TEPower_RBV</pv_name>
+      <x>227</x>
+      <y>92</y>
+      <width>90</width>
+      <height>30</height>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ExposureTime</name>
+      <pv_name>$(P)$(R)Temperature</pv_name>
+      <x>132</x>
+      <y>8</y>
+      <width>90</width>
+      <height>30</height>
+      <background_color>
+        <color name="WritePV_Background" red="128" green="255" blue="255">
+        </color>
+      </background_color>
+      <actions>
+      </actions>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label</name>
+      <text>Set Temp</text>
+      <x>30</x>
+      <y>7</y>
+      <width>97</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(P)$(R)TemperatureActual</pv_name>
+      <x>227</x>
+      <y>57</y>
+      <width>90</width>
+      <height>30</height>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <format>1</format>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label</name>
+      <text>Actual Temp</text>
+      <x>67</x>
+      <y>57</y>
+      <width>155</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+  </widget>
+  <widget type="group" version="2.0.0">
+    <name>Advanced</name>
+    <x>5</x>
+    <y>900</y>
+    <width>360</width>
+    <height>190</height>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <actions>
+    </actions>
+    <widget type="action_button" version="3.0.0">
+      <name>Action Button</name>
+      <actions>
+        <action type="open_display">
+          <file>../../share/opi/AreaDetector/opi_from_adl/ADBase.opi</file>
+          <target>tab</target>
+          <description>Driver Control</description>
+        </action>
+      </actions>
+      <text>Driver</text>
+      <x>127</x>
+      <y>7</y>
+      <width>180</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <rules>
+        <rule name="Enable Rule" prop_id="enabled" out_exp="false">
+          <exp bool_exp="pvStr0==&quot;ANDOR&quot;">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)PortName_RBV</pv_name>
+        </rule>
+      </rules>
+      <tooltip>Advanced Control Settings for Andor Camera</tooltip>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>Menu Button</name>
+      <actions>
+        <action type="open_display">
+          <file>../../share/opi/AreaDetector/opi_from_adl/NDStdArrays.opi</file>
+          <macros>
+            <R>$(ARRAY)</R>
+          </macros>
+          <target>tab</target>
+          <description>Array Plugin 1 (final image)</description>
+        </action>
+        <action type="open_display">
+          <file>../../share/opi/AreaDetector/opi_from_adl/NDStats.opi</file>
+          <macros>
+            <R>$(STAT)</R>
+          </macros>
+          <target>tab</target>
+          <description>Stats Plugin 1</description>
+        </action>
+        <action type="open_display">
+          <file>../../share/opi/AreaDetector/opi_from_adl/NDFileTIFF.opi</file>
+          <macros>
+            <R>$(TIFF)</R>
+          </macros>
+          <target>tab</target>
+          <description>TIFF File Plugin</description>
+        </action>
+        <action type="open_display">
+          <file>../../share/opi/AreaDetector/opi_from_adl/NDROI.opi</file>
+          <macros>
+            <R>$(ROI)</R>
+          </macros>
+          <target>tab</target>
+          <description>ROI (2x2 binning for display)</description>
+        </action>
+        <action type="open_display">
+          <file>../../share/opi/AreaDetector/opi_from_adl/NDTransform.opi</file>
+          <macros>
+            <R>$(TRAN)</R>
+          </macros>
+          <target>tab</target>
+          <description>Transform Plugin</description>
+        </action>
+      </actions>
+      <text>Plugins</text>
+      <x>127</x>
+      <y>42</y>
+      <width>180</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <tooltip>$(actions)</tooltip>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>Action Button</name>
+      <actions>
+        <action type="open_display">
+          <file>../../share/opi/devIocStats/ioc_stats_soft.opi</file>
+          <macros>
+            <ioc>$(S):CS:Q1</ioc>
+          </macros>
+          <target>tab</target>
+          <description>...</description>
+        </action>
+      </actions>
+      <x>272</x>
+      <y>112</y>
+      <width>35</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <tooltip>$(actions)</tooltip>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>Action Button</name>
+      <actions>
+        <action type="open_display">
+          <file>../../share/opi/autosave/save_restore_sns.opi</file>
+          <macros>
+            <S>$(S):CS:Q1</S>
+          </macros>
+          <target>tab</target>
+          <description>...</description>
+        </action>
+      </actions>
+      <x>272</x>
+      <y>77</y>
+      <width>35</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+      <tooltip>$(actions)</tooltip>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <name>LED</name>
+      <pv_name>$(S):CS:Q1:STATUS</pv_name>
+      <bit>0</bit>
+      <x>237</x>
+      <y>117</y>
+      <width>22</width>
+      <height>22</height>
+      <off_color>
+        <color name="OK" red="0" green="255" blue="0">
+        </color>
+      </off_color>
+      <on_color>
+        <color name="Major" red="255" green="0" blue="0">
+        </color>
+      </on_color>
+      <actions>
+      </actions>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update</name>
+      <pv_name>$(S):CS:Q1:SR_status</pv_name>
+      <x>157</x>
+      <y>77</y>
+      <width>110</width>
+      <height>30</height>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_13</name>
+      <text>Autosave Status</text>
+      <x>17</x>
+      <y>77</y>
+      <width>135</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_14</name>
+      <text>IOC Status</text>
+      <x>92</x>
+      <y>112</y>
+      <width>135</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+  </widget>
+  <widget type="group" version="2.0.0">
+    <name>Image Statistics</name>
+    <x>5</x>
+    <y>750</y>
+    <width>360</width>
+    <height>145</height>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <actions>
+    </actions>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_2</name>
+      <pv_name>$(P)$(STAT)MinValue_RBV</pv_name>
+      <x>227</x>
+      <y>2</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_10</name>
+      <text>Min</text>
+      <x>132</x>
+      <y>2</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_2</name>
+      <pv_name>$(P)$(STAT)MaxValue_RBV</pv_name>
+      <x>227</x>
+      <y>37</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Text Update_2</name>
+      <pv_name>$(P)$(STAT)MeanValue_RBV</pv_name>
+      <x>227</x>
+      <y>72</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <wrap_words>false</wrap_words>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_10</name>
+      <text>Max</text>
+      <x>132</x>
+      <y>37</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Label_10</name>
+      <text>Mean</text>
+      <x>132</x>
+      <y>72</y>
+      <width>90</width>
+      <height>30</height>
+      <horizontal_alignment>2</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+      <actions>
+      </actions>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_16</name>
+    <text>USB Traffic</text>
+    <x>1285</x>
+    <y>281</y>
+  </widget>
+  <widget type="textentry" version="3.0.0">
+    <name>Text Entry_1</name>
+    <pv_name>CG1D:Det:$(QHY_NAME):USBTraffic</pv_name>
+    <x>1285</x>
+    <y>311</y>
+    <tooltip>USB Traffic</tooltip>
+  </widget>
+</display>

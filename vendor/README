@@ -1,0 +1,13 @@
+Greg Guyotte 08/30/21:  
+
+21.03.13 compiled and linked fine on RHEL7 
+(cg1d-dassrv3.ornl.gov).  Any newer SDK complained when linking the IOC
+application, complaining of needing GLIBC 3.4.21.  RHEL7 currently
+has glibc 2.17.  I decided to use 21.03.13.
+
+To try a different QHYCCD SDK it is simple:
+1) go into SDK folder
+2) sudo bash distclean.sh (cleans up old SDK)
+3) sudo bash install.sh (installs new SDK)
+4) rebuild support application /home/controls/epics/qhysupport
+5) rebuild IOC /home/controls/cg1d/applications/cg1d-qhy

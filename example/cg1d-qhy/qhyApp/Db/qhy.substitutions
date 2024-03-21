@@ -1,0 +1,57 @@
+
+file QHY.template
+{
+pattern {P, R, PORT, ADDR, TIMEOUT}
+	{CG1D:Det:, Q1:, Q1.CAM, 0, 5} 
+}
+
+# Use this to rotate the image for both
+# data files and CSS display.
+file NDTransform.template
+{
+pattern {P, R, PORT, TIMEOUT, ADDR, NDARRAY_PORT, NDARRAY_ADDR}
+	{CG1D:Det, :Q1:Trans1:, Q1.TRANQ1, 1, 0, Q1.CAM, 0} 
+}
+
+# We use 2x2 binning in this ROI to keep the Array1 size down.
+file NDROI.template
+{
+pattern {P, R, PORT, TIMEOUT, ADDR, NDARRAY_PORT, NDARRAY_ADDR}
+	{CG1D:Det, :Q1:ROI1:, Q1.ROI1, 1, 0, Q1.TRANQ1, 0} 
+}
+
+file NDStdArrays.template
+{
+pattern {P, R, PORT, TIMEOUT, ADDR, TYPE, FTVL, NELEMENTS, NDARRAY_PORT, NDARRAY_ADDR}
+        {CG1D:Det, :Q1:Array1:, Q1.ARR1, 1, 0, Int32, LONG, 2490000, Q1.ROI1, 0}
+}
+
+file NDStats.template
+{
+pattern {P, R, PORT, TIMEOUT, ADDR, XSIZE, YSIZE, HIST_SIZE, NCHANS, NDARRAY_PORT, NDARRAY_ADDR}
+        {CG1D:Det, :Q1:Stats1:, Q1.STATQ1, 1, 0, 9600, 6422, 256, 1000, Q1.CAM, 0}
+}
+
+file NDFileTIFF.template
+{
+pattern {P, R, PORT, TIMEOUT, ADDR, NDARRAY_PORT, NDARRAY_ADDR}
+        {CG1D:Det, :Q1:TIFF1:, Q1.TIFF1, 1, 0, Q1.TRANQ1, 0}
+}
+
+file qhy_aux.template
+{
+pattern {S, STAT}
+	{CG1D:Det:Q1, CG1D:Det:Q1:Stats1:}
+}
+
+file save_restoreStatus.db
+{
+pattern {P}
+        {CG1D:CS:Q1:}
+}
+
+file ioc_sns.db
+{
+pattern {IOCNAME}
+        {CG1D:CS:Q1}
+}
