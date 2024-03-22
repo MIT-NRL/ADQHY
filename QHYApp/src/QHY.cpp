@@ -30,6 +30,7 @@ using std::vector;
 //#include "csbigimg.h"
 
 #include "QHY.h"
+#include <cstring>
 
 static void QHYReadoutTaskC(void *drvPvt);
 static void QHYPollingTaskC(void *drvPvt);

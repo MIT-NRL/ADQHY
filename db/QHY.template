@@ -166,4 +166,10 @@ record(ai, "$(P)$(R)TEPower_RBV")
 
 
 
-
+# /// camera acquisition mode
+record(ao, "$(P)$(R)USBTraffic")
+{
+    field(DTYP,"asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))QHY_USB_TRAFFIC")
+    info(autosaveFields, "VAL")
+}
