@@ -11,7 +11,7 @@ USR_CXXFLAGS += -Wunused-but-set-variable -std=c++0x
 
 #LIBUSB1 is set in configure/CONFIG_SITE
 USR_INCLUDES += -I$(LIBUSB1)
-USR_INCLUDES += -I$(QHY_VENDOR)
+#USR_INCLUDES += -I$(QHY_VENDOR)
 
 LIBRARY_IOC += QHYSupport
 
@@ -30,6 +30,9 @@ QHYSupport_SRCS += QHY.cpp
 #USR_OBJS += libqhyccd.so
 
 QHYSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+
+include $(ADCORE)/ADApp/commonLibraryMakefile
 
 #=============================
 
