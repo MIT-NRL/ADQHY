@@ -369,22 +369,22 @@ unsigned int QHY::InitCamera(void)
     if (retVal == QHYCCD_SUCCESS)
         printf("1X1 binning mode available\n");
     else
-        printf("1X1 binning mode not supported");
+        printf("1X1 binning mode not supported\n");
     retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN2X2MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("2X2 binning mode available\n");
     else
-        printf("2X2 binning mode not supported");
+        printf("2X2 binning mode not supported\n");
     retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN3X3MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("3x3 binning mode available\n");
     else
-        printf("3X3 binning mode not supported");
+        printf("3X3 binning mode not supported\n");
     retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN4X4MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("4X4 binning mode available\n");
     else
-        printf("4X4 binning mode not supported");
+        printf("4X4 binning mode not supported\n");
 
 
     // check param min/max/step value for parameters we are interested to control
