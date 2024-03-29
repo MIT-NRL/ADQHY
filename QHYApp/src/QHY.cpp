@@ -414,6 +414,44 @@ unsigned int QHY::InitCamera(void)
             return 1;
         }
     }
+
+    // check temperature control
+    retVal = IsQHYCCDControlAvailable(pCam, CONTROL_COOLER);
+    if (QHYCCD_SUCCESS == retVal) {
+            printf("The camera has Auto Cooler mode available.\n");
+        }
+    else {
+        printf("Auto Cooler not available, error: %d\n", retVal);
+    }
+    // check the current temp value
+    retVal = GetQHYCCDParam(pCam, CONTROL_CURTEMP);
+    if (retVal != QHYCCD_ERROR){
+        printf("GetQHYCCDParam CONTROL_CURTEMP at : %d, success.\n", retVal);
+    }
+    else {
+        printf("GetQHYCCDParam CONTROL_CURTEMP failure, error: %d\n", retVal);
+    }
+    // check the current PWM value
+    retVal = GetQHYCCDParam(pCam, CONTROL_CURPWM);
+    if (retVal != QHYCCD_ERROR){
+        printf("GetQHYCCDParam CONTROL_CURPWM at : %d, success.\n", retVal);
+    }
+    else {
+        printf("GetQHYCCDParam CONTROL_CURPWM failure, error: %d\n", retVal);
+    }
+
+    // check humidity for sensor
+    retVal = IsQHYCCDControlAvailable(pCam, CAM_HUMIDITY);
+    if (QHYCCD_SUCCESS == retVal) {
+        double hd;
+        retVal = GetQHYCCDHumidity(pCam, &hd);
+        if (QHYCCD_SUCCESS == retVal) {
+            printf("The humidity of the camera is %f.\n", hd);
+        }
+    }
+    else {
+        printf("Humidity sensor not available.");
+    }
 /*
     // check gain
     retVal = IsQHYCCDControlAvailable(pCam, CONTROL_GAIN);
