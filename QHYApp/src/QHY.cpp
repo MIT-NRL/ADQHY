@@ -141,8 +141,10 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
     paramStatus = ((setStringParam(ADModel, camId) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADMaxSizeX, maxImageSizeX) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADMaxSizeY, maxImageSizeY) == asynSuccess) && paramStatus);
-    paramStatus = ((setIntegerParam(ADSizeX, effectiveSizeX) == asynSuccess) && paramStatus);
-    paramStatus = ((setIntegerParam(ADSizeY, effectiveSizeY) == asynSuccess) && paramStatus);
+    paramStatus = ((setIntegerParam(ADSizeX, maxImageSizeX) == asynSuccess) && paramStatus);
+    paramStatus = ((setIntegerParam(ADSizeY, maxImageSizeY) == asynSuccess) && paramStatus);
+    paramStatus = ((setIntegerParam(NDArraySizeX, maxImageSizeX) == asynSuccess) && paramStatus);
+    paramStatus = ((setIntegerParam(NDArraySizeY, maxImageSizeY) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADBinX, 1) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADBinY, 1) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADMinX, 0) == asynSuccess) && paramStatus);
@@ -1101,6 +1103,8 @@ void QHY::readoutTask(void)
                         dataSize = 0;
                     }
                     setIntegerParam(NDArraySize, dataSize);
+                    setIntegerParam(NDArraySizeX, roiSizeX);
+                    setIntegerParam(NDArraySizeY, roiSizeY);
 
                     if (!error) {
                         printf("arrayCallbacks %d\n",arrayCallbacks);
