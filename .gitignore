@@ -3,3 +3,7 @@ lib
 include
 db
 dbd
+configure/*.local
+O.*/
+*~
+*.swp
