@@ -30,6 +30,7 @@ using std::vector;
 //#include "csbigimg.h"
 
 #include "QHY.h"
+#include <cstring>
 
 static void QHYReadoutTaskC(void *drvPvt);
 static void QHYPollingTaskC(void *drvPvt);
@@ -140,8 +141,10 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
     paramStatus = ((setStringParam(ADModel, camId) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADMaxSizeX, maxImageSizeX) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADMaxSizeY, maxImageSizeY) == asynSuccess) && paramStatus);
-    paramStatus = ((setIntegerParam(ADSizeX, effectiveSizeX) == asynSuccess) && paramStatus);
-    paramStatus = ((setIntegerParam(ADSizeY, effectiveSizeY) == asynSuccess) && paramStatus);
+    paramStatus = ((setIntegerParam(ADSizeX, maxImageSizeX) == asynSuccess) && paramStatus);
+    paramStatus = ((setIntegerParam(ADSizeY, maxImageSizeY) == asynSuccess) && paramStatus);
+    paramStatus = ((setIntegerParam(NDArraySizeX, maxImageSizeX) == asynSuccess) && paramStatus);
+    paramStatus = ((setIntegerParam(NDArraySizeY, maxImageSizeY) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADBinX, 1) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADBinY, 1) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADMinX, 0) == asynSuccess) && paramStatus);
@@ -368,22 +371,22 @@ unsigned int QHY::InitCamera(void)
     if (retVal == QHYCCD_SUCCESS)
         printf("1X1 binning mode available\n");
     else
-        printf("1X1 binning mode not supported");
+        printf("1X1 binning mode not supported\n");
     retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN2X2MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("2X2 binning mode available\n");
     else
-        printf("2X2 binning mode not supported");
+        printf("2X2 binning mode not supported\n");
     retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN3X3MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("3x3 binning mode available\n");
     else
-        printf("3X3 binning mode not supported");
+        printf("3X3 binning mode not supported\n");
     retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN4X4MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("4X4 binning mode available\n");
     else
-        printf("4X4 binning mode not supported");
+        printf("4X4 binning mode not supported\n");
 
 
     // check param min/max/step value for parameters we are interested to control
@@ -412,6 +415,44 @@ unsigned int QHY::InitCamera(void)
             getchar();
             return 1;
         }
+    }
+
+    // check temperature control
+    retVal = IsQHYCCDControlAvailable(pCam, CONTROL_COOLER);
+    if (QHYCCD_SUCCESS == retVal) {
+            printf("The camera has Auto Cooler mode available.\n");
+        }
+    else {
+        printf("Auto Cooler not available, error: %d\n", retVal);
+    }
+    // check the current temp value
+    retVal = GetQHYCCDParam(pCam, CONTROL_CURTEMP);
+    if (retVal != QHYCCD_ERROR){
+        printf("GetQHYCCDParam CONTROL_CURTEMP at : %d, success.\n", retVal);
+    }
+    else {
+        printf("GetQHYCCDParam CONTROL_CURTEMP failure, error: %d\n", retVal);
+    }
+    // check the current PWM value
+    retVal = GetQHYCCDParam(pCam, CONTROL_CURPWM);
+    if (retVal != QHYCCD_ERROR){
+        printf("GetQHYCCDParam CONTROL_CURPWM at : %d, success.\n", retVal);
+    }
+    else {
+        printf("GetQHYCCDParam CONTROL_CURPWM failure, error: %d\n", retVal);
+    }
+
+    // check humidity for sensor
+    retVal = IsQHYCCDControlAvailable(pCam, CAM_HUMIDITY);
+    if (QHYCCD_SUCCESS == retVal) {
+        double hd;
+        retVal = GetQHYCCDHumidity(pCam, &hd);
+        if (QHYCCD_SUCCESS == retVal) {
+            printf("The humidity of the camera is %f.\n", hd);
+        }
+    }
+    else {
+        printf("Humidity sensor not available.");
     }
 /*
     // check gain
@@ -1062,6 +1103,8 @@ void QHY::readoutTask(void)
                         dataSize = 0;
                     }
                     setIntegerParam(NDArraySize, dataSize);
+                    setIntegerParam(NDArraySizeX, roiSizeX);
+                    setIntegerParam(NDArraySizeY, roiSizeY);
 
                     if (!error) {
                         printf("arrayCallbacks %d\n",arrayCallbacks);
