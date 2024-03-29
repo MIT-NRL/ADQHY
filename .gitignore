@@ -1,1 +1,5 @@
-lib/
+bin
+lib
+include
+db
+dbd
