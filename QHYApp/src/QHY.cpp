@@ -145,6 +145,7 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
     paramStatus = ((setIntegerParam(ADSizeY, maxImageSizeY) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(NDArraySizeX, maxImageSizeX) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(NDArraySizeY, maxImageSizeY) == asynSuccess) && paramStatus);
+    paramStatus = ((setIntegerParam(NDArraySize, maxImageSizeX*maxImageSizeY*sizeof(epicsUInt16)) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADBinX, 1) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADBinY, 1) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADMinX, 0) == asynSuccess) && paramStatus);
