@@ -13,7 +13,7 @@ USR_CXXFLAGS += -Wunused-but-set-variable -std=c++0x
 USR_INCLUDES += -I$(LIBUSB1)
 #USR_INCLUDES += -I$(QHY_VENDOR)
 
-LIBRARY_IOC += QHYSupport
+LIBRARY_IOC += QHY
 
 # xxxRecord.h will be created from xxxRecord.dbd
 #DBDINC += xxxRecord
@@ -21,7 +21,9 @@ LIBRARY_IOC += QHYSupport
 DBD += QHYSupport.dbd
 
 # Compile and add the code to the support library
-QHYSupport_SRCS += QHY.cpp
+LIB_SRCS += QHY.cpp
+
+LIB_SYS_LIBS_Linux += qhyccd
 
 # These are compiled as part of the top level Make,
 # before we get to compiling the support module.
@@ -29,7 +31,7 @@ QHYSupport_SRCS += QHY.cpp
 #USR_OBJS += $(QHY_VENDOR)/csbigimg.o
 #USR_OBJS += libqhyccd.so
 
-QHYSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
+# QHY_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
 include $(ADCORE)/ADApp/commonLibraryMakefile
