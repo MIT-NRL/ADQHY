@@ -1,7 +1,0 @@
-EPICS_BASE=/home/mitr_4dh4/EPICS/epics-base
-SUPPORT=/home/mitr_4dh4/EPICS/synApps-6-3/support
-ASYN=$(SUPPORT)/asyn-R4-44-2
-
-AREA_DETECTOR=/home/mitr_4dh4/EPICS/synApps-6-3/support/areaDetector-R3-12-1
-ADSUPPORT=$(AREA_DETECTOR)/ADSupport
-ADCORE=$(AREA_DETECTOR)/ADCore
