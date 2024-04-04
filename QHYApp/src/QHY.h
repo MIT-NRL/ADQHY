@@ -50,9 +50,9 @@ class QHY : public ADDriver {
 
   void readoutTask(void);
   void pollingTask(void);
-  void SDKVersion(void);
+  void SDKVersion(unsigned char (&sVersion)[80]);
   unsigned int InitCamera(void);
-  void FirmwareVersion(qhyccd_handle *h);
+  void FirmwareVersion(qhyccd_handle *h, unsigned char (&FWInfo)[128]);
 
  private:
   
@@ -95,6 +95,7 @@ class QHY : public ADDriver {
   //Private dynamic data members
   epicsUInt32 m_Acquiring;
   char camId[32];
+  unsigned char FWInfo[128];
   bool camFound = false;
   qhyccd_handle *pCam;
   unsigned char *pImgData = 0;

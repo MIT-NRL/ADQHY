@@ -86,8 +86,9 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
     //Connect to camera here and get library handle
     printf("%s Connecting to camera...\n", functionName);
 
-    SDKVersion();
-
+    unsigned char sVersion[80];
+    SDKVersion(sVersion);
+    const char* versionStr = reinterpret_cast<const char*>(sVersion);
 
     /* GSG Code for single frame exposure 
     // single frame
@@ -135,10 +136,16 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
     if (retVal != 0)
         return;
 
+    unsigned char FWInfo[128];
+    FirmwareVersion(pCam,FWInfo);
+    const char* FWInfoStr = reinterpret_cast<const char*>(FWInfo);
+
     bool paramStatus = true;
     //Initialise any paramLib parameters that need passing up to device support
     paramStatus = ((setStringParam(ADManufacturer, "QHY") == asynSuccess) && paramStatus);
     paramStatus = ((setStringParam(ADModel, camId) == asynSuccess) && paramStatus);
+    paramStatus = ((setStringParam(ADSDKVersion, versionStr) == asynSuccess) && paramStatus);
+    paramStatus = ((setStringParam(ADFirmwareVersion, FWInfoStr) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADMaxSizeX, maxImageSizeX) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADMaxSizeY, maxImageSizeY) == asynSuccess) && paramStatus);
     paramStatus = ((setIntegerParam(ADSizeX, maxImageSizeX) == asynSuccess) && paramStatus);
@@ -289,7 +296,8 @@ unsigned int QHY::InitCamera(void)
         return 1;
     }
 
-    FirmwareVersion(pCam);
+    unsigned char FWInfo[128];
+    FirmwareVersion(pCam,FWInfo);
 
     // check camera support single frame
     retVal = IsQHYCCDControlAvailable(pCam, CAM_SINGLEFRAMEMODE);
@@ -453,7 +461,7 @@ unsigned int QHY::InitCamera(void)
         }
     }
     else {
-        printf("Humidity sensor not available.");
+        printf("Humidity sensor not available.\n");
     }
 /*
     // check gain
@@ -560,37 +568,37 @@ unsigned int QHY::InitCamera(void)
     return 0;
 }
 
-void QHY::SDKVersion()
+void QHY::SDKVersion(unsigned char (&sVersion)[80])
 {
     unsigned int  YMDS[4];
-    unsigned char sVersion[80];
+    // unsigned char sVersion[80];
 
     memset ((char *)sVersion,0x00,sizeof(sVersion));
     GetQHYCCDSDKVersion(&YMDS[0],&YMDS[1],&YMDS[2],&YMDS[3]);
 
     if ((YMDS[1] < 10)&&(YMDS[2] < 10))
     {
-        sprintf((char *)sVersion,"V20%d0%d0%d_%d\n",YMDS[0],YMDS[1],YMDS[2],YMDS[3]	);
+        sprintf((char *)sVersion,"V20%d0%d0%d_%d",YMDS[0],YMDS[1],YMDS[2],YMDS[3]	);
     }
     else if ((YMDS[1] < 10)&&(YMDS[2] > 10))
     {
-        sprintf((char *)sVersion,"V20%d0%d%d_%d\n",YMDS[0],YMDS[1],YMDS[2],YMDS[3]	);
+        sprintf((char *)sVersion,"V20%d0%d%d_%d",YMDS[0],YMDS[1],YMDS[2],YMDS[3]	);
     }
     else if ((YMDS[1] > 10)&&(YMDS[2] < 10))
     {
-        sprintf((char *)sVersion,"V20%d%d0%d_%d\n",YMDS[0],YMDS[1],YMDS[2],YMDS[3]	);
+        sprintf((char *)sVersion,"V20%d%d0%d_%d",YMDS[0],YMDS[1],YMDS[2],YMDS[3]	);
     }
     else
     {
-        sprintf((char *)sVersion,"V20%d%d%d_%d\n",YMDS[0],YMDS[1],YMDS[2],YMDS[3]	);
+        sprintf((char *)sVersion,"V20%d%d%d_%d",YMDS[0],YMDS[1],YMDS[2],YMDS[3]	);
     }
 
     fprintf(stderr,"QHYCCD SDK Version: %s\n", sVersion);
 }
 
-void QHY::FirmwareVersion(qhyccd_handle *h)
+void QHY::FirmwareVersion(qhyccd_handle *h, unsigned char (&FWInfo)[128])
 {
-    unsigned char fwv[32],FWInfo[256];
+    unsigned char fwv[32];
     unsigned int ret;
     memset (FWInfo,0x00,sizeof(FWInfo));
     ret = GetQHYCCDFWVersion(h,fwv);
@@ -599,23 +607,23 @@ void QHY::FirmwareVersion(qhyccd_handle *h)
         if((fwv[0] >> 4) <= 9)
         {
 
-            sprintf((char *)FWInfo,"Firmware version:20%d_%d_%d\n",((fwv[0] >> 4) + 0x10),
+            sprintf((char *)FWInfo,"20%d_%d_%d",((fwv[0] >> 4) + 0x10),
                     (fwv[0]&~0xf0),fwv[1]);
 
         }
         else
         {
 
-            sprintf((char *)FWInfo,"Firmware version:20%d_%d_%d\n",(fwv[0] >> 4),
+            sprintf((char *)FWInfo,"20%d_%d_%d",(fwv[0] >> 4),
                     (fwv[0]&~0xf0),fwv[1]);
 
         }
     }
     else
     {
-        sprintf((char *)FWInfo,"Firmware version:Not Found!\n");
+        sprintf((char *)FWInfo,"Firmware version:Not Found!");
     }
-    fprintf(stderr,"%s\n", FWInfo);
+    fprintf(stderr,"QHYCCD Firmware Version: %s\n", FWInfo);
 
 }
 
