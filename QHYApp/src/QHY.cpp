@@ -35,6 +35,9 @@ using std::vector;
 static void QHYReadoutTaskC(void *drvPvt);
 static void QHYPollingTaskC(void *drvPvt);
 
+static const char *driverName = "QHYDriver";
+static const char *driverVersion = "0.1.0";
+
 /**
  * Constructor
  */
@@ -60,12 +63,12 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
     pImgData = 0;
 
     //Create the epicsEvents for signaling the readout thread.
-    m_startEvent = epicsEventMustCreate(epicsEventEmpty);
+    this->m_startEvent = new epicsEvent();
     if (!m_startEvent) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s epicsEventCreate failure for start event.\n", functionName);
         return;
     }
-    m_stopEvent = epicsEventMustCreate(epicsEventEmpty);
+    this->m_stopEvent = new epicsEvent();
     if (!m_stopEvent) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s epicsEventCreate failure for stop event.\n", functionName);
         return;
@@ -92,9 +95,9 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
 
     /* GSG Code for single frame exposure 
     // single frame
-    printf("ExpQHYCCDSingleFrame(pCam) - start...\n");
-    retVal = ExpQHYCCDSingleFrame(pCam);
-    printf("ExpQHYCCDSingleFrame(pCam) - end...\n");
+    printf("ExpQHYCCDSingleFrame(cameraID) - start...\n");
+    retVal = ExpQHYCCDSingleFrame(cameraID);
+    printf("ExpQHYCCDSingleFrame(cameraID) - end...\n");
     if (QHYCCD_ERROR != retVal) {
     printf("ExpQHYCCDSingleFrame success.\n");
     if (QHYCCD_READ_DIRECTLY != retVal) {
@@ -107,7 +110,7 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
     }
 
     // get requested memory length
-    uint32_t length = GetQHYCCDMemLength(pCam);
+    uint32_t length = GetQHYCCDMemLength(cameraID);
 
     if (length > 0) {
     pImgData = new unsigned char[length];
@@ -120,7 +123,7 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
     }
 
     // get single frame
-    retVal = GetQHYCCDSingleFrame(pCam, &roiSizeX, &roiSizeY, &bpp, &channels, pImgData);
+    retVal = GetQHYCCDSingleFrame(cameraID, &roiSizeX, &roiSizeY, &bpp, &channels, pImgData);
     if (QHYCCD_SUCCESS == retVal) {
     printf("GetQHYCCDSingleFrame: %d x %d, bpp: %d, channels: %d, success.\n", roiSizeX, roiSizeY, bpp, channels);
     //process image here
@@ -137,7 +140,7 @@ QHY::QHY(const char *portName, int maxBuffers, size_t maxMemory) :
         return;
 
     unsigned char FWInfo[128];
-    FirmwareVersion(pCam,FWInfo);
+    FirmwareVersion(cameraID,FWInfo);
     const char* FWInfoStr = reinterpret_cast<const char*>(FWInfo);
 
     bool paramStatus = true;
@@ -213,7 +216,7 @@ QHY::~QHY()
 {
     printf("ERROR: QHY::~QHY Called.\n");
 
-    unsigned int retVal = CancelQHYCCDExposingAndReadout(pCam);
+    unsigned int retVal = CancelQHYCCDExposingAndReadout(cameraID);
     if (QHYCCD_SUCCESS == retVal) {
         printf("CancelQHYCCDExposingAndReadout success.\n");
     }
@@ -222,7 +225,7 @@ QHY::~QHY()
     }
 
     // close camera handle
-    retVal = CloseQHYCCD(pCam);
+    retVal = CloseQHYCCD(cameraID);
     if (QHYCCD_SUCCESS == retVal) {
         printf("Close QHYCCD success.\n");
     }
@@ -287,8 +290,8 @@ unsigned int QHY::InitCamera(void)
     }
 
     // open camera
-    pCam = OpenQHYCCD(camId);
-    if (pCam != NULL) {
+    cameraID = OpenQHYCCD(camId);
+    if (cameraID != NULL) {
         printf("Open QHYCCD success.\n");
     }
     else {
@@ -297,10 +300,10 @@ unsigned int QHY::InitCamera(void)
     }
 
     unsigned char FWInfo[128];
-    FirmwareVersion(pCam,FWInfo);
+    FirmwareVersion(cameraID,FWInfo);
 
     // check camera support single frame
-    retVal = IsQHYCCDControlAvailable(pCam, CAM_SINGLEFRAMEMODE);
+    retVal = IsQHYCCDControlAvailable(cameraID, CAM_SINGLEFRAMEMODE);
     if (QHYCCD_ERROR == retVal) {
         printf("The detected camera is not support single frame.\n");
         // release sdk resources
@@ -316,7 +319,7 @@ unsigned int QHY::InitCamera(void)
 
     // set single frame mode
     int mode = 0;
-    retVal = SetQHYCCDStreamMode(pCam, mode);
+    retVal = SetQHYCCDStreamMode(cameraID, mode);
     if (QHYCCD_SUCCESS == retVal) {
         printf("SetQHYCCDStreamMode set to: %d, success.\n", mode);
     }
@@ -326,7 +329,7 @@ unsigned int QHY::InitCamera(void)
     }
 
     // initialize camera
-    retVal = InitQHYCCD(pCam);
+    retVal = InitQHYCCD(cameraID);
     if (QHYCCD_SUCCESS == retVal) {
         printf("InitQHYCCD success.\n");
     }
@@ -336,7 +339,7 @@ unsigned int QHY::InitCamera(void)
     }
 
     // get overscan area
-    retVal = GetQHYCCDOverScanArea(pCam, &overscanStartX, &overscanStartY, &overscanSizeX, &overscanSizeY);
+    retVal = GetQHYCCDOverScanArea(cameraID, &overscanStartX, &overscanStartY, &overscanSizeX, &overscanSizeY);
     if (QHYCCD_SUCCESS == retVal) {
         printf("GetQHYCCDOverScanArea:\n");
         printf("Overscan Area startX x startY : %d x %d\n", overscanStartX, overscanStartY);
@@ -348,7 +351,7 @@ unsigned int QHY::InitCamera(void)
     }
 
     // get chip info
-    retVal = GetQHYCCDChipInfo(pCam, &chipWidthMM, &chipHeightMM, &maxImageSizeX, &maxImageSizeY, &pixelWidthUM, &pixelHeightUM, (uint32_t*)&bpp);
+    retVal = GetQHYCCDChipInfo(cameraID, &chipWidthMM, &chipHeightMM, &maxImageSizeX, &maxImageSizeY, &pixelWidthUM, &pixelHeightUM, (uint32_t*)&bpp);
     if (QHYCCD_SUCCESS == retVal) {
         printf("GetQHYCCDChipInfo:\n");
         printf("Chip  size width x height     : %.3f x %.3f [mm]\n", chipWidthMM, chipHeightMM);
@@ -361,14 +364,14 @@ unsigned int QHY::InitCamera(void)
     }
 
     // check color camera
-    retVal = IsQHYCCDControlAvailable(pCam, CAM_COLOR);
+    retVal = IsQHYCCDControlAvailable(cameraID, CAM_COLOR);
     if (retVal == BAYER_GB || retVal == BAYER_GR || retVal == BAYER_BG || retVal == BAYER_RG) {
         printf("This is a color camera.\n");
         printf("even this is a color camera, in Single Frame mode THE SDK ONLY SUPPORT RAW OUTPUT.So please do not set SetQHYCCDDebayerOnOff() to true;");
-        //SetQHYCCDDebayerOnOff(pCam, true);
-        //SetQHYCCDParam(pCam, CONTROL_WBR, 20);
-        //SetQHYCCDParam(pCam, CONTROL_WBG, 20);
-        //SetQHYCCDParam(pCam, CONTROL_WBB, 20);
+        //SetQHYCCDDebayerOnOff(cameraID, true);
+        //SetQHYCCDParam(cameraID, CONTROL_WBR, 20);
+        //SetQHYCCDParam(cameraID, CONTROL_WBG, 20);
+        //SetQHYCCDParam(cameraID, CONTROL_WBB, 20);
     }
     else {
         printf("This is a mono camera.\n");
@@ -376,22 +379,22 @@ unsigned int QHY::InitCamera(void)
 
     // check bin mode
 
-    retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN1X1MODE);
+    retVal = IsQHYCCDControlAvailable(cameraID, CAM_BIN1X1MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("1X1 binning mode available\n");
     else
         printf("1X1 binning mode not supported\n");
-    retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN2X2MODE);
+    retVal = IsQHYCCDControlAvailable(cameraID, CAM_BIN2X2MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("2X2 binning mode available\n");
     else
         printf("2X2 binning mode not supported\n");
-    retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN3X3MODE);
+    retVal = IsQHYCCDControlAvailable(cameraID, CAM_BIN3X3MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("3x3 binning mode available\n");
     else
         printf("3X3 binning mode not supported\n");
-    retVal = IsQHYCCDControlAvailable(pCam, CAM_BIN4X4MODE);
+    retVal = IsQHYCCDControlAvailable(cameraID, CAM_BIN4X4MODE);
     if (retVal == QHYCCD_SUCCESS)
         printf("4X4 binning mode available\n");
     else
@@ -402,9 +405,9 @@ unsigned int QHY::InitCamera(void)
     double min,max,step;
     vector<CONTROL_ID> params = {CONTROL_GAIN, CONTROL_OFFSET, CONTROL_EXPOSURE, CONTROL_TRANSFERBIT};
     for (auto item : params) {
-        retVal = IsQHYCCDControlAvailable(pCam, item);
+        retVal = IsQHYCCDControlAvailable(cameraID, item);
         if (retVal == QHYCCD_SUCCESS) {
-            retVal = GetQHYCCDParamMinMaxStep(pCam, item, &min, &max, &step);
+            retVal = GetQHYCCDParamMinMaxStep(cameraID, item, &min, &max, &step);
             if (retVal == QHYCCD_SUCCESS)
                 printf("min = %1f, max = %1f, step = %1f\n",min,max,step);
             else
@@ -413,9 +416,9 @@ unsigned int QHY::InitCamera(void)
     }
 
     // check traffic
-    retVal = IsQHYCCDControlAvailable(pCam, CONTROL_USBTRAFFIC);
+    retVal = IsQHYCCDControlAvailable(cameraID, CONTROL_USBTRAFFIC);
     if (QHYCCD_SUCCESS == retVal) {
-        retVal = SetQHYCCDParam(pCam, CONTROL_USBTRAFFIC, USB_TRAFFIC);
+        retVal = SetQHYCCDParam(cameraID, CONTROL_USBTRAFFIC, USB_TRAFFIC);
         if (QHYCCD_SUCCESS == retVal) {
             printf("SetQHYCCDParam CONTROL_USBTRAFFIC set to: %d, success.\n", USB_TRAFFIC);
         }
@@ -427,7 +430,7 @@ unsigned int QHY::InitCamera(void)
     }
 
     // check temperature control
-    retVal = IsQHYCCDControlAvailable(pCam, CONTROL_COOLER);
+    retVal = IsQHYCCDControlAvailable(cameraID, CONTROL_COOLER);
     if (QHYCCD_SUCCESS == retVal) {
             printf("The camera has Auto Cooler mode available.\n");
         }
@@ -435,7 +438,7 @@ unsigned int QHY::InitCamera(void)
         printf("Auto Cooler not available, error: %d\n", retVal);
     }
     // check the current temp value
-    retVal = GetQHYCCDParam(pCam, CONTROL_CURTEMP);
+    retVal = GetQHYCCDParam(cameraID, CONTROL_CURTEMP);
     if (retVal != QHYCCD_ERROR){
         printf("GetQHYCCDParam CONTROL_CURTEMP at : %d, success.\n", retVal);
     }
@@ -443,7 +446,7 @@ unsigned int QHY::InitCamera(void)
         printf("GetQHYCCDParam CONTROL_CURTEMP failure, error: %d\n", retVal);
     }
     // check the current PWM value
-    retVal = GetQHYCCDParam(pCam, CONTROL_CURPWM);
+    retVal = GetQHYCCDParam(cameraID, CONTROL_CURPWM);
     if (retVal != QHYCCD_ERROR){
         printf("GetQHYCCDParam CONTROL_CURPWM at : %d, success.\n", retVal);
     }
@@ -452,10 +455,10 @@ unsigned int QHY::InitCamera(void)
     }
 
     // check humidity for sensor
-    retVal = IsQHYCCDControlAvailable(pCam, CAM_HUMIDITY);
+    retVal = IsQHYCCDControlAvailable(cameraID, CAM_HUMIDITY);
     if (QHYCCD_SUCCESS == retVal) {
         double hd;
-        retVal = GetQHYCCDHumidity(pCam, &hd);
+        retVal = GetQHYCCDHumidity(cameraID, &hd);
         if (QHYCCD_SUCCESS == retVal) {
             printf("The humidity of the camera is %f.\n", hd);
         }
@@ -465,9 +468,9 @@ unsigned int QHY::InitCamera(void)
     }
 /*
     // check gain
-    retVal = IsQHYCCDControlAvailable(pCam, CONTROL_GAIN);
+    retVal = IsQHYCCDControlAvailable(cameraID, CONTROL_GAIN);
     if (QHYCCD_SUCCESS == retVal) {
-        retVal = SetQHYCCDParam(pCam, CONTROL_GAIN, CHIP_GAIN);
+        retVal = SetQHYCCDParam(cameraID, CONTROL_GAIN, CHIP_GAIN);
         if (retVal == QHYCCD_SUCCESS) {
             printf("SetQHYCCDParam CONTROL_GAIN set to: %d, success\n", CHIP_GAIN);
         }
@@ -479,9 +482,9 @@ unsigned int QHY::InitCamera(void)
     }
 
     // check offset
-    retVal = IsQHYCCDControlAvailable(pCam, CONTROL_OFFSET);
+    retVal = IsQHYCCDControlAvailable(cameraID, CONTROL_OFFSET);
     if (QHYCCD_SUCCESS == retVal) {
-        retVal = SetQHYCCDParam(pCam, CONTROL_OFFSET, CHIP_OFFSET);
+        retVal = SetQHYCCDParam(cameraID, CONTROL_OFFSET, CHIP_OFFSET);
         if (QHYCCD_SUCCESS == retVal)  {
             printf("SetQHYCCDParam CONTROL_GAIN set to: %d, success.\n", CHIP_OFFSET);
         }
@@ -494,7 +497,7 @@ unsigned int QHY::InitCamera(void)
     */
 /*
     // set exposure time
-    retVal = SetQHYCCDParam(pCam, CONTROL_EXPOSURE, EXPOSURE_TIME);
+    retVal = SetQHYCCDParam(cameraID, CONTROL_EXPOSURE, EXPOSURE_TIME);
     printf("SetQHYCCDParam CONTROL_EXPOSURE set to: %d, success.\n", EXPOSURE_TIME);
     if (QHYCCD_SUCCESS == retVal)
     {}
@@ -506,12 +509,12 @@ unsigned int QHY::InitCamera(void)
 */
     uint32_t numReadModes=0;
 
-    GetQHYCCDNumberOfReadModes(pCam, &numReadModes);
+    GetQHYCCDNumberOfReadModes(cameraID, &numReadModes);
     printf("number of read modes: %d\n", numReadModes);
 
     char modeName[80];
     for (int i=0; i<numReadModes; i++) {
-        GetQHYCCDReadModeName(pCam, i, modeName);
+        GetQHYCCDReadModeName(cameraID, i, modeName);
         printf("Name %d: %s\n", i, modeName);
     }
 
@@ -526,7 +529,7 @@ unsigned int QHY::InitCamera(void)
     getIntegerParam(QHYBitDepthParam, &bpp);
 
     // set binning mode
-    retVal = SetQHYCCDBinMode(pCam, camBinX, camBinY);
+    retVal = SetQHYCCDBinMode(cameraID, camBinX, camBinY);
     if (QHYCCD_SUCCESS == retVal) {
         printf("SetQHYCCDBinMode set to: binX: %d, binY: %d, success.\n", camBinX, camBinY);
     }
@@ -536,9 +539,9 @@ unsigned int QHY::InitCamera(void)
     }
 */
     // set bit resolution
-    retVal = IsQHYCCDControlAvailable(pCam, CONTROL_TRANSFERBIT);
+    retVal = IsQHYCCDControlAvailable(cameraID, CONTROL_TRANSFERBIT);
     if (QHYCCD_SUCCESS == retVal) {
-        retVal = SetQHYCCDBitsMode(pCam, bpp);
+        retVal = SetQHYCCDBitsMode(cameraID, bpp);
         if (QHYCCD_SUCCESS == retVal) {
             printf("SetQHYCCDParam CONTROL_TRANSFERBIT set to: %d, success.\n", bpp);
         }
@@ -549,13 +552,13 @@ unsigned int QHY::InitCamera(void)
         }
     }
 /*
-    retVal = SetQHYCCDResolution(pCam, roiStartX, roiStartY,
+    retVal = SetQHYCCDResolution(cameraID, roiStartX, roiStartY,
             roiSizeX/camBinX, roiSizeY/camBinY);
     if (retVal != QHYCCD_SUCCESS)
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "SetQHYCCDResolution error\n");
     
     // get effective area
-    retVal = GetQHYCCDEffectiveArea(pCam, &effectiveStartX, &effectiveStartY, &effectiveSizeX, &effectiveSizeY);
+    retVal = GetQHYCCDEffectiveArea(cameraID, &effectiveStartX, &effectiveStartY, &effectiveSizeX, &effectiveSizeY);
     if (QHYCCD_SUCCESS == retVal) {
         printf("GetQHYCCDEffectiveArea:\n");
         printf("Init Effective Area startX x startY: %d x %d\n", effectiveStartX, effectiveStartY);
@@ -667,6 +670,7 @@ void QHY::report(FILE *fp, int details)
 asynStatus QHY::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     asynStatus status = asynSuccess;
+    u_int32_t retVal = 1;
     int function = pasynUser->reason;
     int addr = 0;
     int adStatus = 0;
@@ -690,22 +694,18 @@ asynStatus QHY::writeInt32(asynUser *pasynUser, epicsInt32 value)
     getIntegerParam(ADStatus, &adStatus);
 
     if (function == ADAcquire) {
-        if ((value==1) && ((adStatus == ADStatusIdle) || (adStatus == ADStatusError) || (adStatus == ADStatusAborted))) {
-            m_Acquiring = 1;
-            m_aborted = false;
-            setIntegerParam(ADStatus, ADStatusAcquire);
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s Start Event.\n", functionName);
-            epicsEventSignal(this->m_startEvent);
+        if (value == 1 && !acquiring) {
+            startEvent->signal();
         }
-        if ((value==0) && ((adStatus != ADStatusIdle) && (adStatus != ADStatusError) && (adStatus != ADStatusAborted))) {
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s Abort Exposure.\n", functionName);
-            abortExposure();
+
+        if (value == 0 && acquiring) {
+            stopEvent->signal();
         }
     } else if (function == QHYReadoutModeParam) {
         if ((value!=1) && (value!=2) && (value!=3) && (value!=4))
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "Bin mode not supported\n");
         else {
-            cam_err = SetQHYCCDBinMode(pCam, value, value);
+            cam_err = SetQHYCCDBinMode(cameraID, value, value);
 
             if (cam_err == QHYCCD_SUCCESS) {
                 setIntegerParam(ADBinX, value);
@@ -714,11 +714,11 @@ asynStatus QHY::writeInt32(asynUser *pasynUser, epicsInt32 value)
             /*
                 setIntegerParam(ADSizeX, sizeX/value);
                 setIntegerParam(ADSizeY, sizeY/value);
-                cam_err = SetQHYCCDResolution(pCam, 0, 0, sizeX/value, sizeY/value);
+                cam_err = SetQHYCCDResolution(cameraID, 0, 0, sizeX/value, sizeY/value);
                 if (cam_err != QHYCCD_SUCCESS)
                     asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "SetQHYCCDResolution error\n");
                 // get effective area
-                cam_err = GetQHYCCDEffectiveArea(pCam, &effectiveStartX, &effectiveStartY, &effectiveSizeX, &effectiveSizeY);
+                cam_err = GetQHYCCDEffectiveArea(cameraID, &effectiveStartX, &effectiveStartY, &effectiveSizeX, &effectiveSizeY);
                 if (QHYCCD_SUCCESS == cam_err) {
                     printf("GetQHYCCDEffectiveArea:\n");
                     printf("Effective Area startX x startY: %d x %d\n", effectiveStartX, effectiveStartY);
@@ -734,16 +734,47 @@ asynStatus QHY::writeInt32(asynUser *pasynUser, epicsInt32 value)
         if ((value!=0) && (value!=1) && (value!=2) && (value!=3) &&(value!=4))
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "Read mode not supported\n");
         else {
-            cam_err = SetQHYCCDReadMode(pCam, value);
+            cam_err = SetQHYCCDReadMode(cameraID, value);
             if (cam_err != QHYCCD_SUCCESS)
                 asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "SetQHYCCDReadMode error\n");
+
+            retVal = GetQHYCCDReadModeResolution(cameraID, value, &maxImageSizeX, &maxImageSizeY);
+            if (QHYCCD_SUCCESS == retVal) {
+                printf("GetQHYCCDReadModeResolution:\n");
+                printf("Image size width x height     : %d x %d\n", maxImageSizeX, maxImageSizeY);
+            }
+            else { 
+                printf("GetQHYCCDReadModeResolution failure, error: %d\n", retVal);
+            }
+
+                // initialize camera
+            retVal = InitQHYCCD(cameraID);
+            if (QHYCCD_SUCCESS == retVal) {
+                printf("InitQHYCCD success.\n");
+            }
+            else {
+                printf("InitQHYCCD faililure, error: %d\n", retVal);
+            }
+
+                // get chip info
+            retVal = GetQHYCCDChipInfo(cameraID, &chipWidthMM, &chipHeightMM, &maxImageSizeX, &maxImageSizeY, &pixelWidthUM, &pixelHeightUM, (uint32_t*)&bpp);
+            if (QHYCCD_SUCCESS == retVal) {
+                printf("GetQHYCCDChipInfo:\n");
+                printf("Chip  size width x height     : %.3f x %.3f [mm]\n", chipWidthMM, chipHeightMM);
+                printf("Pixel size width x height     : %.3f x %.3f [um]\n", pixelWidthUM, pixelHeightUM);
+                printf("Image size width x height     : %d x %d\n", maxImageSizeX, maxImageSizeY);
+            }
+            else {
+                printf("GetQHYCCDChipInfo failure, error: %d\n", retVal);
+    }
+            
         }
         printf("Read mode set to %d\n", value);
     } else if (function == QHYBitDepthParam) {
         if ((value != 8) && (value != 16) && (value != 32))
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "Bit depth not supported\n");
         else {
-            cam_err = SetQHYCCDParam(pCam, CONTROL_TRANSFERBIT, value);
+            cam_err = SetQHYCCDParam(cameraID, CONTROL_TRANSFERBIT, value);
             if (cam_err != QHYCCD_SUCCESS)
                 asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "SetQHYCCDParam (bit depth error)\n");
         }
@@ -758,14 +789,14 @@ asynStatus QHY::writeInt32(asynUser *pasynUser, epicsInt32 value)
         if ((value < 0) || (value > 255))
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "Offset range exceeded (0-255)\n");
         else {
-            cam_err = SetQHYCCDParam(pCam, CONTROL_OFFSET, value);
+            cam_err = SetQHYCCDParam(cameraID, CONTROL_OFFSET, value);
             if (cam_err != QHYCCD_SUCCESS)
                 asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "SetQHYCCDParam (offset error)\n");
         }
         printf("Offset set to %d\n", value);
     } else if (function == QHYUSBTrafficParam) {
         printf("Setting USB_TRAFFIC to %d\n", value);
-        int retVal = SetQHYCCDParam(pCam, CONTROL_USBTRAFFIC, value);
+        int retVal = SetQHYCCDParam(cameraID, CONTROL_USBTRAFFIC, value);
         if (retVal == QHYCCD_SUCCESS) printf("Successfully set USB_TRAFFIC\n");
 	else printf("Error setting USB_TRAFFIC\n");
     } 
@@ -888,22 +919,22 @@ asynStatus QHY::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 
     if (function == ADAcquireTime) {
         if (value > 0) {
-            retVal = SetQHYCCDParam(pCam, CONTROL_EXPOSURE, value*1000*1000);
+            retVal = SetQHYCCDParam(cameraID, CONTROL_EXPOSURE, value*1000*1000);
             if (retVal != QHYCCD_SUCCESS)
                 asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "Set camera exposure time failure.\n");
         }
         printf("Exposure time set to %f\n", value);
     } else if (function == ADTemperature) {
-        if ((cam_err = ControlQHYCCDTemp(pCam, value)) != QHYCCD_SUCCESS) {
+        if ((cam_err = ControlQHYCCDTemp(cameraID, value)) != QHYCCD_SUCCESS) {
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "Set camera temperature failure.\n");
             status = asynError;
         }
     } else if (function == ADGain) {
         if (value < 0)
             value = 0;
-        if (value > 200)
-            value = 200;
-        cam_err = SetQHYCCDParam(pCam, CONTROL_GAIN, value);
+        if (value > 3624)
+            value = 3625;
+        cam_err = SetQHYCCDParam(cameraID, CONTROL_GAIN, value);
         if (cam_err != QHYCCD_SUCCESS)
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "SetQHYCCDParam (gain error)\n");
         printf("Gain set to %f\n", value);
@@ -933,7 +964,7 @@ asynStatus QHY::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
  */
 void QHY::abortExposure(void) 
 {
-    CancelQHYCCDExposingAndReadout(pCam);
+    CancelQHYCCDExposingAndReadout(cameraID);
     m_aborted = true;
 }
 
@@ -941,242 +972,428 @@ void QHY::abortExposure(void)
 /**
  * Readout thread function
  */
-void QHY::readoutTask(void)
-{
-    epicsEventWaitStatus eventStatus;
-    epicsFloat64 timeout = 0.001;
-    bool error = false;
-    size_t dims[2];
-    int nDims = 2;
-    /*
-    epicsInt32 sizeX = 0;
-    epicsInt32 sizeY = 0;
-    epicsInt32 minX = 0;
-    epicsInt32 minY = 0;
-    epicsInt32 binX = 0;
-    epicsInt32 binY = 0;
-    */
-    NDDataType_t dataType;
-    epicsInt32 iDataType = 0;
-    epicsUInt32 dataSize = 0;
-    epicsTimeStamp nowTime;
-    NDArray *pArray = NULL;
-    epicsInt32 numImagesCounter = 0;
-    epicsInt32 imageCounter = 0;
-    unsigned int retVal;
-    double expTime;
+// void QHY::readoutTask(void)
+// {
+//     epicsEventWaitStatus eventStatus;
+//     epicsFloat64 timeout = 0.001;
+//     bool error = false;
+//     size_t dims[2];
+//     int nDims = 2;
+//     /*
+//     epicsInt32 sizeX = 0;
+//     epicsInt32 sizeY = 0;
+//     epicsInt32 minX = 0;
+//     epicsInt32 minY = 0;
+//     epicsInt32 binX = 0;
+//     epicsInt32 binY = 0;
+//     */
+//     NDDataType_t dataType;
+//     epicsInt32 iDataType = 0;
+//     epicsUInt32 dataSize = 0;
+//     epicsTimeStamp nowTime;
+//     NDArray *pArray = NULL;
+//     epicsInt32 numImagesCounter = 0;
+//     epicsInt32 imageCounter = 0;
+//     unsigned int retVal;
+//     double expTime;
 
-    const char* functionName = "QHY::readoutTask";
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s Started Readout Thread.\n", functionName);
+//     const char* functionName = "QHY::readoutTask";
+//     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s Started Readout Thread.\n", functionName);
 
-    while (1) {
+//     while (true) {
 
-        //Wait for a stop event, with a short timeout, to catch any that were done after last one.
-        eventStatus = epicsEventWaitWithTimeout(m_stopEvent, timeout);          
-        if (eventStatus == epicsEventWaitOK) {
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s Got Stop Event Before Start Event.\n", functionName);
-        }
+//         //Wait for a stop event, with a short timeout, to catch any that were done after last one.
+//         eventStatus = epicsEventWaitWithTimeout(m_stopEvent, timeout);          
+//         if (eventStatus == epicsEventWaitOK) {
+//             asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s Got Stop Event Before Start Event.\n", functionName);
+//         }
 
-        lock();
-        if (!error) {
-            setStringParam(ADStatusMessage, "Idle");
-        }
-        callParamCallbacks();
-        unlock();
+//         lock();
+//         if (!error) {
+//             setStringParam(ADStatusMessage, "Idle");
+//         }
+//         callParamCallbacks();
+//         unlock();
 
-        eventStatus = epicsEventWait(m_startEvent);          
-        if (eventStatus == epicsEventWaitOK) {
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s Got Start Event.\n", functionName);
-            error = false;
-            setStringParam(ADStatusMessage, " ");
-            lock();
-            setIntegerParam(ADNumImagesCounter, 0);
-            setIntegerParam(ADNumExposuresCounter, 0);
+//         eventStatus = epicsEventWait(m_startEvent);          
+//         if (eventStatus == epicsEventWaitOK) {
+//             asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s Got Start Event.\n", functionName);
+//             error = false;
+//             setStringParam(ADStatusMessage, " ");
+//             lock();
+//             setIntegerParam(ADNumImagesCounter, 0);
+//             setIntegerParam(ADNumExposuresCounter, 0);
 
-            //Sanity checks
-            printf("pCam = %d\n", (unsigned int *)pCam);
-            if (pCam == NULL) {
-                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s NULL pointer.\n", functionName);
-                break;
-            }
+//             //Sanity checks
+//             printf("cameraID = %d\n", (unsigned int *)cameraID);
+//             if (cameraID == NULL) {
+//                 asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s NULL pointer.\n", functionName);
+//                 break;
+//             }
 
-            //Read the frame sizes 
-            getIntegerParam(ADMinX, &roiStartX);
-            getIntegerParam(ADMinY, &roiStartY);
-            getIntegerParam(ADSizeX, &roiSizeX);
-            getIntegerParam(ADSizeY, &roiSizeY);
-            getIntegerParam(ADBinX, &camBinX);
-            getIntegerParam(ADBinY, &camBinY);
-            getIntegerParam(QHYBitDepthParam, &bpp);
+//             //Read the frame sizes 
+//             getIntegerParam(ADMinX, &roiStartX);
+//             getIntegerParam(ADMinY, &roiStartY);
+//             getIntegerParam(ADSizeX, &roiSizeX);
+//             getIntegerParam(ADSizeY, &roiSizeY);
+//             getIntegerParam(ADBinX, &camBinX);
+//             getIntegerParam(ADBinY, &camBinY);
+//             getIntegerParam(QHYBitDepthParam, &bpp);
             
-            // set binning mode
-            retVal = SetQHYCCDBinMode(pCam, camBinX, camBinY);
-            if (QHYCCD_SUCCESS == retVal) {
-                printf("SetQHYCCDBinMode set to: binX: %d, binY: %d, success.\n", camBinX, camBinY);
-            }
-            else {
-                printf("SetQHYCCDBinMode failure, error: %d\n", retVal);
-            }
+//             // set binning mode
+//             retVal = SetQHYCCDBinMode(cameraID, camBinX, camBinY);
+//             if (QHYCCD_SUCCESS == retVal) {
+//                 printf("SetQHYCCDBinMode set to: binX: %d, binY: %d, success.\n", camBinX, camBinY);
+//             }
+//             else {
+//                 printf("SetQHYCCDBinMode failure, error: %d\n", retVal);
+//             }
 
-            retVal = SetQHYCCDResolution(pCam, roiStartX, roiStartY,
-                    roiSizeX/camBinX, roiSizeY/camBinY);
-            if (retVal != QHYCCD_SUCCESS)
-                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "SetQHYCCDResolution error\n");
-            // get effective area
-            retVal = GetQHYCCDEffectiveArea(pCam, &effectiveStartX, &effectiveStartY, &effectiveSizeX, &effectiveSizeY);
-            if (QHYCCD_SUCCESS == retVal) {
-                printf("GetQHYCCDEffectiveArea:\n");
-                printf("Effective Area startX x startY: %d x %d\n", effectiveStartX, effectiveStartY);
-                printf("Effective Area sizeX  x sizeY : %d x %d\n", effectiveSizeX, effectiveSizeY);
-            }
-            else {
-                printf("GetQHYCCDEffectiveArea failure, error: %d\n", retVal);
-            }
+//             retVal = SetQHYCCDResolution(cameraID, roiStartX, roiStartY,
+//                     roiSizeX/camBinX, roiSizeY/camBinY);
+//             if (retVal != QHYCCD_SUCCESS)
+//                 asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "SetQHYCCDResolution error\n");
+//             // get effective area
+//             retVal = GetQHYCCDEffectiveArea(cameraID, &effectiveStartX, &effectiveStartY, &effectiveSizeX, &effectiveSizeY);
+//             if (QHYCCD_SUCCESS == retVal) {
+//                 printf("GetQHYCCDEffectiveArea:\n");
+//                 printf("Effective Area startX x startY: %d x %d\n", effectiveStartX, effectiveStartY);
+//                 printf("Effective Area sizeX  x sizeY : %d x %d\n", effectiveSizeX, effectiveSizeY);
+//             }
+//             else {
+//                 printf("GetQHYCCDEffectiveArea failure, error: %d\n", retVal);
+//             }
 
-            if (!error) {
-                //Do exposure
-                callParamCallbacks();
-                unlock();
-                retVal = ExpQHYCCDSingleFrame(pCam);
-                lock();
-                printf("after exposure started\n");
-                if (retVal == QHYCCD_ERROR) {
-                    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-                            "%s. ExpQHYCCDSingleFrame returned an error. \n", 
-                            functionName);
-                    error = true;
-                    setStringParam(ADStatusMessage, "ExpQHYCCDSingleFrame error.");
-                }
+//             if (!error) {
+//                 //Do exposure
+//                 callParamCallbacks();
+//                 unlock();
+//                 retVal = ExpQHYCCDSingleFrame(cameraID);
+//                 lock();
+//                 printf("after exposure started\n");
+//                 if (retVal == QHYCCD_ERROR) {
+//                     asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+//                             "%s. ExpQHYCCDSingleFrame returned an error. \n", 
+//                             functionName);
+//                     error = true;
+//                     setStringParam(ADStatusMessage, "ExpQHYCCDSingleFrame error.");
+//                 }
                 
-                /* While waiting for exposure to complete, put this thread to sleep.
-                 * We call unlock() so the other thread can continue to process, updating
-                 * temperature and exposure progress, etc.
-                 */
-                setStringParam(ADStatusMessage, "Waiting for exposure");
-                getDoubleParam(ADAcquireTime, &expTime); 
-                unlock();
-                epicsThreadSleep(expTime);
-                lock();
+//                 /* While waiting for exposure to complete, put this thread to sleep.
+//                  * We call unlock() so the other thread can continue to process, updating
+//                  * temperature and exposure progress, etc.
+//                  */
+//                 setStringParam(ADStatusMessage, "Waiting for exposure");
+//                 getDoubleParam(ADAcquireTime, &expTime); 
+//                 unlock();
+//                 epicsThreadSleep(expTime);
+//                 lock();
 
-                // get requested memory length - will always be maximum size
-                // according to QHY support.
-                uint32_t length = GetQHYCCDMemLength(pCam);
-                if (length > 0) {
-                    pImgData = new unsigned char[length];
-                    memset(pImgData, 0, length);
-                    printf("Allocated memory for frame: %d [uchar].\n", length);
+//                 // get requested memory length - will always be maximum size
+//                 // according to QHY support.
+//                 uint32_t length = GetQHYCCDMemLength(cameraID);
+//                 if (length > 0) {
+//                     pImgData = new unsigned char[length];
+//                     memset(pImgData, 0, length);
+//                     printf("Allocated memory for frame: %d [uchar].\n", length);
+//                 } else {
+//                     error = true;
+//                     setStringParam(ADStatusMessage, "GetQHYCCDMemLength error.");
+//                 }
+
+//                 setStringParam(ADStatusMessage, "Image data copy");
+//                 callParamCallbacks();
+//                 if (!m_aborted) { 
+//                     // get single frame
+//                     retVal = GetQHYCCDSingleFrame(cameraID, (uint32_t*)&roiSizeX,
+//                             (uint32_t*)&roiSizeY, (uint32_t*)&bpp, &channels, pImgData);
+//                     if (QHYCCD_SUCCESS == retVal) {
+//                         printf("GetQHYCCDSingleFrame: %d x %d, bpp: %d, channels: %d, success.\n", roiSizeX, roiSizeY, bpp, channels);
+//                         //process image here
+//                     } else {
+//                         printf("GetQHYCCDSingleFrame failure, error: %d\n", retVal);
+//                     }
+
+//                     //unsigned short *pData = p_Img->GetImagePointer();
+
+//                     //Update counters
+//                     getIntegerParam(NDArrayCounter, &imageCounter);
+//                     imageCounter++;
+//                     setIntegerParam(NDArrayCounter, imageCounter);
+//                     getIntegerParam(ADNumImagesCounter, &numImagesCounter);
+//                     numImagesCounter++;
+//                     setIntegerParam(ADNumImagesCounter, numImagesCounter);
+
+//                     //NDArray callbacks
+//                     int arrayCallbacks = 0;
+//                     getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+//                     getIntegerParam(NDDataType, &iDataType);
+//                     dataType = static_cast<NDDataType_t>(iDataType);
+//                     if (dataType == NDUInt8) {
+//                         dataSize = roiSizeX*roiSizeY*sizeof(epicsUInt8);
+//                     } else if (dataType == NDUInt16) {
+//                         dataSize = roiSizeX*roiSizeY*sizeof(epicsUInt16);
+//                     } else if (dataType == NDUInt32) {
+//                         dataSize = roiSizeX*roiSizeY*sizeof(epicsUInt32);
+//                     } else {
+//                         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+//                                 "%s. ERROR: We can't handle this data type. dataType: %d\n", 
+//                                 functionName, dataType);
+//                         error = true;
+//                         dataSize = 0;
+//                     }
+//                     setIntegerParam(NDArraySize, dataSize);
+//                     setIntegerParam(NDArraySizeX, roiSizeX);
+//                     setIntegerParam(NDArraySizeY, roiSizeY);
+
+//                     if (!error) {
+//                         printf("arrayCallbacks %d\n",arrayCallbacks);
+//                         if (arrayCallbacks) {
+//                             //Allocate an NDArray
+//                             dims[0] = roiSizeX;
+//                             dims[1] = roiSizeY;
+//                             if ((pArray = this->pNDArrayPool->alloc(nDims, dims, dataType, 0, NULL)) == NULL) {
+//                                 asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+//                                         "%s. ERROR: pArray is NULL.\n", 
+//                                         functionName);
+//                             } else {
+//                                 epicsTimeGetCurrent(&nowTime);
+//                                 pArray->uniqueId = imageCounter;
+//                                 pArray->timeStamp = nowTime.secPastEpoch + nowTime.nsec / 1.e9;
+//                                 updateTimeStamp(&pArray->epicsTS);
+//                                 //Get any attributes that have been defined for this driver
+//                                 this->getAttributes(pArray->pAttributeList);
+//                                 //We copy data because the SBIG class library holds onto the original buffer until the next acqusition
+//                                 asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, 
+//                                         "%s: Copying data. dataSize: %d\n", functionName, dataSize);
+//                                 memcpy(pArray->pData, pImgData, dataSize);
+
+//                                 /* GSG: avoid memory leak by cleaning up allocated block each time */
+//                                 delete [] pImgData;
+
+//                                 unlock();
+//                                 asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s: Calling NDArray callback\n", functionName);
+//                                 doCallbacksGenericPointer(pArray, NDArrayData, 0);
+//                                 lock();
+//                                 pArray->release();
+//                             }
+//                         }
+
+//                         setIntegerParam(ADStatus, ADStatusIdle);
+
+//                     } else {
+//                         setIntegerParam(ADStatus, ADStatusError);
+//                     }
+
+//                 } else { //end if (!m_aborted)
+//                     setIntegerParam(ADStatus, ADStatusAborted);
+//                     m_aborted = false;
+//                 }
+//             }
+
+//             callParamCallbacks();
+//             //Complete Acquire callback
+//             setIntegerParam(ADAcquire, 0);
+//             callParamCallbacks();
+//             unlock();
+
+//             asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, 
+//                     "%s Completed acqusition.\n", functionName);
+
+//         } //end of start event
+
+//     } //end of while(1)
+
+//     asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+//             "%s: ERROR: Exiting QHYReadoutTask main loop.\n", functionName);
+
+// }
+
+void QHY::readoutTask() {
+    int status = asynSuccess;
+    int imageCounter;
+    int numImages, numImagesCounter;
+    int imageMode;
+    int acquire = 0;
+    int arrayCallbacks;
+    epicsTimeStamp startTime, endTime;
+    double acquirePeriod;
+
+    u_int8_t exposureStatus;
+    ROIFormat_t roiFormat;
+
+    this->lock();
+    while (true) {
+        if (cameraID == NULL) {
+            epicsThreadSleep(1);
+            continue;
+        }
+
+        // If not currently acquiring, wait for semaphore signal
+        if (!acquire) {
+            this->unlock();
+            bool signal = this->m_startEvent->wait(1);
+            this->lock();
+
+            if (!signal)
+                continue;
+            acquire = 1;
+            setIntegerParam(ADNumImagesCounter, 0);
+        }
+
+        epicsTimeGetCurrent(&startTime);
+
+        // Send parameters to camera
+        // status = asynSuccess;
+        // status |= setROIFormat(&roiFormat);
+
+        // int reverseX, reverseY;
+        // status |= getIntegerParam(ADReverseX, &reverseX);
+        // status |= getIntegerParam(ADReverseY, &reverseY);
+        // status |= setReverse(reverseX, reverseY);
+
+        if (status != 0) {
+            acquire = 0;
+            setIntegerParam(ADAcquire, 0);
+            setIntegerParam(ADStatus, ADStatusError);
+            callParamCallbacks();
+            continue;
+        }
+
+        // Wait until camera is ready to start with exposure
+        this->unlock();
+        while (!GetQHYCCDCameraStatus(cameraID, &exposureStatus) &&
+               exposureStatus == QHYCCD_SUCCESS) {
+            epicsThreadSleep(SHORT_WAIT);
+        }
+        this->lock();
+
+        if (ExpQHYCCDSingleFrame(cameraID) == QHYCCD_ERROR_EXPFAILED) {
+            // FAILED
+            setIntegerParam(ADStatus, ADStatusError);
+            callParamCallbacks();
+            continue;
+        }
+
+        setIntegerParam(ADStatus, ADStatusAcquire);
+        callParamCallbacks();
+
+        // Wait until image has been acquired
+        while (GetQHYCCDExposureRemaining(cameraID) < 100 &&
+               !GetQHYCCDCameraStatus(cameraID, &exposureStatus)
+               && exposureStatus == QHYCCD_SUCCESS) {
+            this->unlock();
+            bool s = this->m_stopEvent->wait(SHORT_WAIT);
+            this->lock();
+            if (s) {
+                // Abort exposure
+                CancelQHYCCDExposing(cameraID);
+
+                acquire = 0;
+                setIntegerParam(ADAcquire, 0);
+                getIntegerParam(ADImageMode, &imageMode);
+                if (imageMode == ADImageContinuous) {
+                    setIntegerParam(ADStatus, ADStatusIdle);
                 } else {
-                    error = true;
-                    setStringParam(ADStatusMessage, "GetQHYCCDMemLength error.");
-                }
-
-                setStringParam(ADStatusMessage, "Image data copy");
-                callParamCallbacks();
-                if (!m_aborted) { 
-                    // get single frame
-                    retVal = GetQHYCCDSingleFrame(pCam, (uint32_t*)&roiSizeX,
-                            (uint32_t*)&roiSizeY, (uint32_t*)&bpp, &channels, pImgData);
-                    if (QHYCCD_SUCCESS == retVal) {
-                        printf("GetQHYCCDSingleFrame: %d x %d, bpp: %d, channels: %d, success.\n", roiSizeX, roiSizeY, bpp, channels);
-                        //process image here
-                    } else {
-                        printf("GetQHYCCDSingleFrame failure, error: %d\n", retVal);
-                    }
-
-                    //unsigned short *pData = p_Img->GetImagePointer();
-
-                    //Update counters
-                    getIntegerParam(NDArrayCounter, &imageCounter);
-                    imageCounter++;
-                    setIntegerParam(NDArrayCounter, imageCounter);
-                    getIntegerParam(ADNumImagesCounter, &numImagesCounter);
-                    numImagesCounter++;
-                    setIntegerParam(ADNumImagesCounter, numImagesCounter);
-
-                    //NDArray callbacks
-                    int arrayCallbacks = 0;
-                    getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
-                    getIntegerParam(NDDataType, &iDataType);
-                    dataType = static_cast<NDDataType_t>(iDataType);
-                    if (dataType == NDUInt8) {
-                        dataSize = roiSizeX*roiSizeY*sizeof(epicsUInt8);
-                    } else if (dataType == NDUInt16) {
-                        dataSize = roiSizeX*roiSizeY*sizeof(epicsUInt16);
-                    } else if (dataType == NDUInt32) {
-                        dataSize = roiSizeX*roiSizeY*sizeof(epicsUInt32);
-                    } else {
-                        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-                                "%s. ERROR: We can't handle this data type. dataType: %d\n", 
-                                functionName, dataType);
-                        error = true;
-                        dataSize = 0;
-                    }
-                    setIntegerParam(NDArraySize, dataSize);
-                    setIntegerParam(NDArraySizeX, roiSizeX);
-                    setIntegerParam(NDArraySizeY, roiSizeY);
-
-                    if (!error) {
-                        printf("arrayCallbacks %d\n",arrayCallbacks);
-                        if (arrayCallbacks) {
-                            //Allocate an NDArray
-                            dims[0] = roiSizeX;
-                            dims[1] = roiSizeY;
-                            if ((pArray = this->pNDArrayPool->alloc(nDims, dims, dataType, 0, NULL)) == NULL) {
-                                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-                                        "%s. ERROR: pArray is NULL.\n", 
-                                        functionName);
-                            } else {
-                                epicsTimeGetCurrent(&nowTime);
-                                pArray->uniqueId = imageCounter;
-                                pArray->timeStamp = nowTime.secPastEpoch + nowTime.nsec / 1.e9;
-                                updateTimeStamp(&pArray->epicsTS);
-                                //Get any attributes that have been defined for this driver
-                                this->getAttributes(pArray->pAttributeList);
-                                //We copy data because the SBIG class library holds onto the original buffer until the next acqusition
-                                asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, 
-                                        "%s: Copying data. dataSize: %d\n", functionName, dataSize);
-                                memcpy(pArray->pData, pImgData, dataSize);
-
-                                /* GSG: avoid memory leak by cleaning up allocated block each time */
-                                delete [] pImgData;
-
-                                unlock();
-                                asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s: Calling NDArray callback\n", functionName);
-                                doCallbacksGenericPointer(pArray, NDArrayData, 0);
-                                lock();
-                                pArray->release();
-                            }
-                        }
-
-                        setIntegerParam(ADStatus, ADStatusIdle);
-
-                    } else {
-                        setIntegerParam(ADStatus, ADStatusError);
-                    }
-
-                } else { //end if (!m_aborted)
                     setIntegerParam(ADStatus, ADStatusAborted);
-                    m_aborted = false;
+                }
+                callParamCallbacks();
+                continue;
+            }
+        }
+
+        getIntegerParam(NDArrayCounter, &imageCounter);
+        getIntegerParam(ADNumImages, &numImages);
+        getIntegerParam(ADNumImagesCounter, &numImagesCounter);
+        getIntegerParam(ADImageMode, &imageMode);
+        getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+        getDoubleParam(ADAcquirePeriod, &acquirePeriod);
+
+        if (exposureStatus == QHYCCD_SUCCESS) {
+            // Update counters
+            numImagesCounter++;
+            imageCounter++;
+            setIntegerParam(NDArrayCounter, imageCounter);
+            setIntegerParam(ADNumImagesCounter, numImagesCounter);
+
+            // Allocate pImage and read data from camera
+            NDArray *pImage;
+
+            // if (roiFormat.imgType == ASI_IMG_RGB24) {
+            //     size_t dims[3] = {(size_t)roiFormat.imgWidth,
+            //                       (size_t)roiFormat.imgHeight, 3};
+            //     pImage = this->pNDArrayPool->alloc(3, dims, roiFormat.dataType,
+            //                                        0, NULL);
+            // } else {
+                size_t dims[2] = {(size_t)4212,
+                                  (size_t)2850};
+                pImage = this->pNDArrayPool->alloc(2, dims, NDUInt16,
+                                                   0, NULL);
+            // }
+
+            pImage->uniqueId = imageCounter;
+            pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
+            updateTimeStamp(&pImage->epicsTS);
+
+            GetQHYCCDSingleFrame(cameraID, (uint32_t*)4212,
+                            (uint32_t*)2850, (uint32_t*)16, &channels, (unsigned char *)pImage->pData);
+
+            setIntegerParam(NDArraySize, pImage->dataSize);
+
+            this->getAttributes(pImage->pAttributeList);
+            
+            if (arrayCallbacks) {
+                doCallbacksGenericPointer(pImage, NDArrayData, 0);
+            }
+            pImage->release();
+        } else {
+            // ERROR
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                      "%s:%s: Exposure failed with status %d\n", driverName,
+                      __func__, exposureStatus);
+
+            setIntegerParam(ADStatus, ADStatusError);
+        }
+
+        callParamCallbacks();
+
+        // Check if we are done with acquisition
+        getIntegerParam(ADAcquire, &acquire);
+        if ((acquire == 0) || (imageMode == ADImageSingle) ||
+            ((imageMode == ADImageMultiple) &&
+             (numImagesCounter >= numImages))) {
+            acquire = 0;
+            setIntegerParam(ADAcquire, 0);
+            setIntegerParam(ADStatus, ADStatusIdle);
+            callParamCallbacks();
+        }
+
+        if (acquire) {
+            epicsTimeGetCurrent(&endTime);
+            double elapsedTime = epicsTimeDiffInSeconds(&endTime, &startTime);
+            double delay = acquirePeriod - elapsedTime;
+
+            if (delay > 0) {
+                setIntegerParam(ADStatus, ADStatusWaiting);
+                callParamCallbacks();
+                this->unlock();
+                bool s = this->m_stopEvent->wait(delay);
+                this->lock();
+                if (s) {
+                    acquire = 0;
+                    if (imageMode == ADImageContinuous) {
+                        setIntegerParam(ADStatus, ADStatusIdle);
+                    } else {
+                        setIntegerParam(ADStatus, ADStatusAborted);
+                    }
+                    setIntegerParam(ADAcquire, 0);
+                    callParamCallbacks();
                 }
             }
-
-            callParamCallbacks();
-            //Complete Acquire callback
-            setIntegerParam(ADAcquire, 0);
-            callParamCallbacks();
-            unlock();
-
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, 
-                    "%s Completed acqusition.\n", functionName);
-
-        } //end of start event
-
-    } //end of while(1)
-
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s: ERROR: Exiting QHYReadoutTask main loop.\n", functionName);
-
+        }
+    }
 }
+
 
 /**
  * polling thread function
@@ -1184,7 +1401,8 @@ void QHY::readoutTask(void)
 void QHY::pollingTask(void)
 {
     epicsFloat64 timeout = 1.0;
-    unsigned int ccd_temp, ccd_power;
+    unsigned int ccd_power;
+    double ccd_temp;
     /* PAR_ERROR cam_err = CE_NO_ERROR;
        MY_LOGICAL te_status = FALSE;
        double ccd_temp_set = 0.0;
@@ -1200,7 +1418,7 @@ void QHY::pollingTask(void)
         epicsThreadSleep(timeout);
 
         //Sanity checks
-        if (pCam == NULL) {
+        if (cameraID == NULL) {
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s NULL pointer.\n", functionName);
             break;
         }
@@ -1208,22 +1426,23 @@ void QHY::pollingTask(void)
         lock();
 
         /* poll and update camera temperature */
-        ccd_temp = GetQHYCCDParam(pCam, CONTROL_CURTEMP);
+        ccd_temp = GetQHYCCDParam(cameraID, CONTROL_CURTEMP);
         if (ccd_temp != QHYCCD_ERROR) {
             setDoubleParam(ADTemperatureActual, ccd_temp);
         } else {
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "Get camera temperature failure.\n");
+            unsigned int status = QHY::InitCamera();
         }
 
         /* poll and update camera cooling power*/
-        ccd_power = GetQHYCCDParam(pCam, CONTROL_CURPWM);
+        ccd_power = GetQHYCCDParam(cameraID, CONTROL_CURPWM);
         if (ccd_power != QHYCCD_ERROR) {
             setDoubleParam(QHYTEPowerParam, (ccd_power*100)/255);
         } else {
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "Get camera cooling power failure.\n");
         }
 
-        expTimeLeft = GetQHYCCDExposureRemaining(pCam);
+        expTimeLeft = GetQHYCCDExposureRemaining(cameraID);
         setDoubleParam(QHYPercentCompleteParam, 100-expTimeLeft);
         /*
            GRAB_STATE camState = GS_IDLE;

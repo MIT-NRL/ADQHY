@@ -21,7 +21,7 @@ LIBRARY_IOC += QHY
 DBD += QHYSupport.dbd
 
 # Compile and add the code to the support library
-LIB_SRCS += QHY.cpp
+LIB_SRCS += QHYDriver.cpp
 
 LIB_SYS_LIBS_Linux += qhyccd
 

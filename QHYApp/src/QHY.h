@@ -37,6 +37,17 @@
 #define QHYLastParamString               "QHY_LAST"
 #define QHYUSBTrafficParamString               "QHY_USB_TRAFFIC"
 
+#define SHORT_WAIT (0.00025)
+
+typedef struct ROIFormat {
+    NDColorMode_t colorMode;
+    NDDataType_t dataType;
+
+    int imgWidth, imgHeight;
+    int imgBin;
+    int startX, startY;
+} ROIFormat_t;
+
 class QHY : public ADDriver {
 
  public:
@@ -97,7 +108,7 @@ class QHY : public ADDriver {
   char camId[32];
   unsigned char FWInfo[128];
   bool camFound = false;
-  qhyccd_handle *pCam;
+  qhyccd_handle *cameraID;
   unsigned char *pImgData = 0;
   //int m_CamWidth;
   //int m_CamHeight;
