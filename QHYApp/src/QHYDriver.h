@@ -30,6 +30,33 @@ typedef struct ROIFormat {
     int startX, startY;
 } ROIFormat_t;
 
+typedef struct _QHY_CAMERA_INFO {
+    char Name[64];
+    qhyccd_handle *cameraID;
+
+    int SupportedBins[16]; // 1 means bin1 which is supported by every camera, 2 means bin 2 etc.. 0 is the end of supported binning method
+    uint32_t numReadModes;
+
+    double chipWidthMM;
+    double chipHeightMM;
+    double pixelWidthUM;
+    double pixelHeightUM;
+
+    unsigned int overscanStartX;
+    unsigned int overscanStartY;
+    unsigned int overscanSizeX;
+    unsigned int overscanSizeY;
+
+    unsigned int maxImageSizeX;
+    unsigned int maxImageSizeY;
+
+    bool IsCoolerCam;
+    bool IsHumiditySensor;
+
+    bool IsColorCam;
+    BAYER_ID BayerPattern;
+} QHY_CAMERA_INFO;
+
 class QHYDriver : public ADDriver {
 public:
     /**
@@ -63,6 +90,7 @@ public:
 private:
     char camId[32];
     qhyccd_handle *cameraID;
+    QHY_CAMERA_INFO cameraInfo;
 
     epicsEvent *startEvent;
     epicsEvent *stopEvent;
@@ -103,6 +131,7 @@ private:
     asynStatus connectCamera();
     asynStatus disconnectCamera();
     asynStatus setReverse(int reverseX, int reverseY);
+    asynStatus setReadMode(int readMode);
 
 protected:
     int ADOffset;
