@@ -568,8 +568,8 @@ asynStatus QHYDriver::connectCamera() {
     status |= setIntegerParam(ADSizeY, cameraInfo.effectiveSizeY);
     status |= setIntegerParam(ADMaxSizeX, cameraInfo.maxImageSizeX);
     status |= setIntegerParam(ADMaxSizeY, cameraInfo.maxImageSizeY);
-    status |= setIntegerParam(NDArraySizeX, cameraInfo.effectiveSizeX);
-    status |= setIntegerParam(NDArraySizeY, cameraInfo.effectiveSizeY);
+    status |= setIntegerParam(NDArraySizeX, cameraInfo.effectiveSizeX - cameraInfo.effectiveStartX);
+    status |= setIntegerParam(NDArraySizeY, cameraInfo.effectiveSizeY - cameraInfo.effectiveStartY);
 
     if (status) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
@@ -737,8 +737,8 @@ asynStatus QHYDriver::setROIFormat(ROIFormat_t *out) {
         status |= setIntegerParam(ADSizeY, sizeY);
     }
 
-    imgWidth = sizeX / binX;
-    imgHeight = sizeY / binY;
+    imgWidth = (sizeX - minX) / binX;
+    imgHeight = (sizeY - minY) / binY;
     startX = minX / binX;
     startY = minY / binY;
 
@@ -770,6 +770,7 @@ asynStatus QHYDriver::setROIFormat(ROIFormat_t *out) {
 
     return ((asynStatus)status);
 }
+
 
 asynStatus QHYDriver::setReadMode(int readMode) {
     unsigned int retVal;
@@ -819,8 +820,8 @@ asynStatus QHYDriver::setReadMode(int readMode) {
     status |= setIntegerParam(ADSizeY, cameraInfo.effectiveSizeY);
     status |= setIntegerParam(ADMaxSizeX, cameraInfo.maxImageSizeX);
     status |= setIntegerParam(ADMaxSizeY, cameraInfo.maxImageSizeY);
-    status |= setIntegerParam(NDArraySizeX, cameraInfo.effectiveSizeX);
-    status |= setIntegerParam(NDArraySizeY, cameraInfo.effectiveSizeY);
+    status |= setIntegerParam(NDArraySizeX, cameraInfo.effectiveSizeX - cameraInfo.effectiveStartX);
+    status |= setIntegerParam(NDArraySizeY, cameraInfo.effectiveSizeY - cameraInfo.effectiveStartY);
     
 
     return (asynStatus)status;
