@@ -47,6 +47,11 @@ typedef struct _QHY_CAMERA_INFO {
     unsigned int overscanSizeX;
     unsigned int overscanSizeY;
 
+    unsigned int effectiveStartX;
+    unsigned int effectiveStartY;
+    unsigned int effectiveSizeX;
+    unsigned int effectiveSizeY;
+
     unsigned int maxImageSizeX;
     unsigned int maxImageSizeY;
 
@@ -102,25 +107,10 @@ private:
     int camBinX;
     int camBinY;
 
-    double chipWidthMM;
-    double chipHeightMM;
-    double pixelWidthUM;
-    double pixelHeightUM;
-
     epicsInt32 roiStartX;
     epicsInt32 roiStartY;
     epicsInt32 roiSizeX;
     epicsInt32 roiSizeY;
-
-    unsigned int overscanStartX;
-    unsigned int overscanStartY;
-    unsigned int overscanSizeX;
-    unsigned int overscanSizeY;
-
-    unsigned int effectiveStartX;
-    unsigned int effectiveStartY;
-    unsigned int effectiveSizeX;
-    unsigned int effectiveSizeY;
 
     unsigned int maxImageSizeX;
     unsigned int maxImageSizeY;
@@ -130,7 +120,7 @@ private:
     asynStatus setROIFormat(ROIFormat_t *out);
     asynStatus connectCamera();
     asynStatus disconnectCamera();
-    asynStatus setReverse(int reverseX, int reverseY);
+    asynStatus setReverse();
     asynStatus setReadMode(int readMode);
 
 protected:

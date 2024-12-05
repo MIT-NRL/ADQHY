@@ -13,12 +13,12 @@ USR_CXXFLAGS += -Wunused-but-set-variable -std=c++0x
 USR_INCLUDES += -I$(LIBUSB1)
 #USR_INCLUDES += -I$(QHY_VENDOR)
 
-LIBRARY_IOC += QHY
+LIBRARY_IOC += QHYDriver
 
 # xxxRecord.h will be created from xxxRecord.dbd
 #DBDINC += xxxRecord
 # Install devXxxSoft.dbd into <top>/dbd
-DBD += QHYSupport.dbd
+DBD += QHYDriverSupport.dbd
 
 # Compile and add the code to the support library
 LIB_SRCS += QHYDriver.cpp

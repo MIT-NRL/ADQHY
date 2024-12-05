@@ -120,7 +120,7 @@ asynStatus QHYDriver::disconnect(asynUser *pasynUser) {
 asynStatus QHYDriver::writeInt32(asynUser *pasynUser, epicsInt32 value) {
     int function = pasynUser->reason;
     int status = asynSuccess;
-    int reverseX, reverseY;
+    // int reverseX, reverseY;
 
     int acquiring;
     getIntegerParam(ADAcquire, &acquiring);
@@ -248,6 +248,7 @@ asynStatus QHYDriver::connectCamera() {
     this->cameraInfo.cameraID = cameraID;
     if (cameraID != NULL) {
         printf("Open QHYCCD success.\n");
+        printf("cameraID: %p\n", cameraID);
     }
     else {
         printf("Open QHYCCD failure.\n");
@@ -297,12 +298,23 @@ asynStatus QHYDriver::connectCamera() {
     retVal = GetQHYCCDOverScanArea(cameraID, &cameraInfo.overscanStartX, &cameraInfo.overscanStartY, &cameraInfo.overscanSizeX, &cameraInfo.overscanSizeY);
     if (QHYCCD_SUCCESS == retVal) {
         printf("GetQHYCCDOverScanArea:\n");
-        printf("Overscan Area startX x startY : %d x %d\n", overscanStartX, overscanStartY);
-        printf("Overscan Area sizeX  x sizeY  : %d x %d\n", overscanSizeX, overscanSizeY);
+        printf("Overscan Area startX x startY : %d x %d\n", cameraInfo.overscanStartX, cameraInfo.overscanStartY);
+        printf("Overscan Area sizeX  x sizeY  : %d x %d\n", cameraInfo.overscanSizeX, cameraInfo.overscanSizeY);
     }
     else {
         printf("GetQHYCCDOverScanArea failure, error: %d\n", retVal);
         return asynError;
+    }
+
+    // get effective area
+    retVal = GetQHYCCDEffectiveArea(cameraID, &cameraInfo.effectiveStartX, &cameraInfo.effectiveStartY, &cameraInfo.effectiveSizeX, &cameraInfo.effectiveSizeY);
+    if (QHYCCD_SUCCESS == retVal) {
+        printf("GetQHYCCDEffectiveArea:\n");
+        printf("Init Effective Area startX x startY: %d x %d\n", cameraInfo.effectiveStartX, cameraInfo.effectiveStartY);
+        printf("Init Effective Area sizeX  x sizeY : %d x %d\n", cameraInfo.effectiveSizeX, cameraInfo.effectiveSizeY);
+    }
+    else {
+        printf("GetQHYCCDEffectiveArea failure, error: %d\n", retVal);
     }
 
     // get chip info
@@ -397,6 +409,20 @@ asynStatus QHYDriver::connectCamera() {
         }
         else {
             printf("SetQHYCCDParam CONTROL_USBTRAFFIC failure, error: %d\n", retVal);
+            getchar();
+            return asynError;
+        }
+    }
+
+    // check traffic
+    retVal = IsQHYCCDControlAvailable(cameraID, CONTROL_ImgProc);
+    if (QHYCCD_SUCCESS == retVal) {
+        retVal = SetQHYCCDParam(cameraID, CONTROL_ImgProc, ImgProc::NOPROC);
+        if (QHYCCD_SUCCESS == retVal) {
+            printf("SetQHYCCDParam CONTROL_ImgProc set to: %d, success.\n", ImgProc::NOPROC);
+        }
+        else {
+            printf("SetQHYCCDParam CONTROL_ImgProc failure, error: %d\n", retVal);
             getchar();
             return asynError;
         }
@@ -527,25 +553,8 @@ asynStatus QHYDriver::connectCamera() {
             return asynError;
         }
     }
-/*
-    retVal = SetQHYCCDResolution(cameraID, roiStartX, roiStartY,
-            roiSizeX/camBinX, roiSizeY/camBinY);
-    if (retVal != QHYCCD_SUCCESS)
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "SetQHYCCDResolution error\n");
-    
-    // get effective area
-    retVal = GetQHYCCDEffectiveArea(cameraID, &effectiveStartX, &effectiveStartY, &effectiveSizeX, &effectiveSizeY);
-    if (QHYCCD_SUCCESS == retVal) {
-        printf("GetQHYCCDEffectiveArea:\n");
-        printf("Init Effective Area startX x startY: %d x %d\n", effectiveStartX, effectiveStartY);
-        printf("Init Effective Area sizeX  x sizeY : %d x %d\n", effectiveSizeX, effectiveSizeY);
-    }
-    else {
-        printf("GetQHYCCDEffectiveArea failure, error: %d\n", retVal);
-    }
-*/
-        // Set some initial values for various parameters
 
+    // Set some initial values for various parameters
     status |= setStringParam(ADManufacturer, "QHY");
     status |= setStringParam(ADModel, camId);
     status |= setStringParam(ADSerialNumber, "N/A");
@@ -553,12 +562,14 @@ asynStatus QHYDriver::connectCamera() {
     status |= setStringParam(NDDriverVersion, driverVersion);
     status |= setStringParam(ADSDKVersion, versionStr);
 
-    status |= setIntegerParam(ADSizeX, cameraInfo.maxImageSizeX);
-    status |= setIntegerParam(ADSizeY, cameraInfo.maxImageSizeY);
+    status |= setIntegerParam(ADMinX, cameraInfo.effectiveStartX);
+    status |= setIntegerParam(ADMinY, cameraInfo.effectiveStartY);
+    status |= setIntegerParam(ADSizeX, cameraInfo.effectiveSizeX);
+    status |= setIntegerParam(ADSizeY, cameraInfo.effectiveSizeY);
     status |= setIntegerParam(ADMaxSizeX, cameraInfo.maxImageSizeX);
     status |= setIntegerParam(ADMaxSizeY, cameraInfo.maxImageSizeY);
-    status |= setIntegerParam(NDArraySizeX, cameraInfo.maxImageSizeX);
-    status |= setIntegerParam(NDArraySizeY, cameraInfo.maxImageSizeY);
+    status |= setIntegerParam(NDArraySizeX, cameraInfo.effectiveSizeX);
+    status |= setIntegerParam(NDArraySizeY, cameraInfo.effectiveSizeY);
 
     if (status) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
@@ -791,36 +802,57 @@ asynStatus QHYDriver::setReadMode(int readMode) {
         return asynError;
     }
 
-    status |= setIntegerParam(ADSizeX, cameraInfo.maxImageSizeX);
-    status |= setIntegerParam(ADSizeY, cameraInfo.maxImageSizeY);
+    // get effective area
+    retVal = GetQHYCCDEffectiveArea(cameraID, &cameraInfo.effectiveStartX, &cameraInfo.effectiveStartY, &cameraInfo.effectiveSizeX, &cameraInfo.effectiveSizeY);
+    if (QHYCCD_SUCCESS == retVal) {
+        printf("GetQHYCCDEffectiveArea:\n");
+        printf("Init Effective Area startX x startY: %d x %d\n", cameraInfo.effectiveStartX, cameraInfo.effectiveStartY);
+        printf("Init Effective Area sizeX  x sizeY : %d x %d\n", cameraInfo.effectiveSizeX, cameraInfo.effectiveSizeY);
+    }
+    else {
+        printf("GetQHYCCDEffectiveArea failure, error: %d\n", retVal);
+    }
+
+    status |= setIntegerParam(ADMinX, cameraInfo.effectiveStartX);
+    status |= setIntegerParam(ADMinY, cameraInfo.effectiveStartY);
+    status |= setIntegerParam(ADSizeX, cameraInfo.effectiveSizeX);
+    status |= setIntegerParam(ADSizeY, cameraInfo.effectiveSizeY);
     status |= setIntegerParam(ADMaxSizeX, cameraInfo.maxImageSizeX);
     status |= setIntegerParam(ADMaxSizeY, cameraInfo.maxImageSizeY);
-    status |= setIntegerParam(NDArraySizeX, cameraInfo.maxImageSizeX);
-    status |= setIntegerParam(NDArraySizeY, cameraInfo.maxImageSizeY);
+    status |= setIntegerParam(NDArraySizeX, cameraInfo.effectiveSizeX);
+    status |= setIntegerParam(NDArraySizeY, cameraInfo.effectiveSizeY);
     
 
     return (asynStatus)status;
 }
 
-// asynStatus QHYDriver::setReverse(int reverseX, int reverseY) {
-//     unsigned int retVal;
+asynStatus QHYDriver::setReverse() {
+    unsigned int retVal;
+    int status = asynSuccess;
+    int reverse;
 
-//     retVal = SetQHYCCDCallBack(ImgProc::MIRRORH, reverseX);
-//     if (retVal != QHYCCD_SUCCESS) {
-//         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-//                   "SetQHYCCDCallBack MIRRORH error\n");
-//         return asynError;
-//     }
-//     retVal = SetQHYCCDCallBack(ImgProc::MIRRORV, reverseY);
-//     if (retVal != QHYCCD_SUCCESS) {
-//         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-//                   "SetQHYCCDCallBack MIRRORV error\n");
-//         return asynError;
-//     }
-//     return (asynStatus)status;
-// }
+    int reverseX, reverseY;
+    status |= getIntegerParam(ADReverseX, &reverseX);
+    status |= getIntegerParam(ADReverseY, &reverseY);
 
+    if (reverseX && reverseY) {
+        reverse = ImgProc::ROTATION180;
+    } else if (reverseX && !reverseY) {
+        reverse = ImgProc::MIRRORV;
+    } else if (reverseY && !reverseX) {
+        reverse = ImgProc::MIRRORH;
+    } else {
+        reverse = ImgProc::NOPROC;
+    }
 
+    retVal = SetQHYCCDParam(cameraID, CONTROL_ImgProc, reverse);
+    if (retVal != QHYCCD_SUCCESS) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                  "SetQHYCCDParam CONTROL_ImgProc error\n");
+       return asynError;
+    }
+    return (asynStatus)status;
+}
 
 void QHYDriver::captureTask() {
     unsigned int retVal;
@@ -863,10 +895,7 @@ void QHYDriver::captureTask() {
         status = asynSuccess;
         status |= setROIFormat(&roiFormat);
 
-        // int reverseX, reverseY;
-        // status |= getIntegerParam(ADReverseX, &reverseX);
-        // status |= getIntegerParam(ADReverseY, &reverseY);
-        // status |= setReverse(reverseX, reverseY);
+        status |= setReverse();
 
         if (status != 0) {
             acquire = 0;
@@ -943,7 +972,6 @@ void QHYDriver::captureTask() {
             // Allocate pImage and read data from camera
             NDArray *pImage;
 
-            printf("Allocating image\n");
             u_int32_t dataSize = GetQHYCCDMemLength(cameraID);
             // if (roiFormat.imgType == ASI_IMG_RGB24) {
             //     size_t dims[3] = {(size_t)roiFormat.imgWidth,
@@ -956,8 +984,6 @@ void QHYDriver::captureTask() {
                 pImage = this->pNDArrayPool->alloc(2, dims, roiFormat.dataType,
                                                    0, NULL);
             // }
-            printf("Image allocated\n");
-
             
             printf("Data size: %d\n", dataSize);
             printf("Image size: %d\n", pImage->dataSize);
@@ -966,12 +992,10 @@ void QHYDriver::captureTask() {
             pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
             updateTimeStamp(&pImage->epicsTS);
 
-            // bpp = 8;
             printf("bpp: %d\n", bpp);
 
             GetQHYCCDSingleFrame(cameraID, (uint32_t*)&roiFormat.imgWidth,
                             (uint32_t*)&roiFormat.imgHeight, (uint32_t*)&bpp, &channels, (unsigned char *)pImage->pData);
-            printf("Data read\n");
 
             setIntegerParam(NDArraySize, pImage->dataSize);
 

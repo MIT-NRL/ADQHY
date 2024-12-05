@@ -3,8 +3,8 @@
 #
 # Template file for the QHY areaDetector driver.
 #
-# Greg Guyotte
-# March 4, 2021
+# Sean Fayfar
+# Dec 2024
 #
 # Macros:
 # P,R - Base PV name
@@ -54,15 +54,15 @@ record(mbbo, "$(P)$(R)ReadMode")
 {
     field(DTYP,"asynInt32")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))QHY_READ_MODE")
-    field(ZRST, "Photographic DS0 16BIT")
+    field(ZRST, "")
     field(ZRVL, "0")
-    field(ONST, "High Gain Mode 16BIT")
+    field(ONST, "")
     field(ONVL, "1")
-    field(TWST, "Extend Fullwell Mode")
+    field(TWST, "")
     field(TWVL, "2")
-    field(THST, "Extend Fullwell 2CMS")
+    field(THST, "")
     field(THVL, "3")
-    field(FRST, "14 bit mode")
+    field(FRST, "")
     field(FRVL, "4")
     field(PINI,"YES")
     info(autosaveFields, "VAL")
