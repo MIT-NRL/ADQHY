@@ -1067,7 +1067,7 @@ void QHYDriver::pollingTask() {
        double te_power = 0.0;
        */
     double expTimeLeft;
-    const char* functionName = "QHY::pollingTask";
+    const char* functionName = "QHYDriver::pollingTask";
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s Started Polling Thread.\n", functionName);
 
     while (true) {
