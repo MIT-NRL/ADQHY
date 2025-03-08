@@ -32,7 +32,7 @@
 #include <iocsh.h>
 
 static const char *driverName = "QHYDriver";
-static const char *driverVersion = "0.1.0";
+static const char *driverVersion = "0.2.0";
 
 static void QHYDriverCaptureTaskC(void *drvPvt) {
     QHYDriver *driver = (QHYDriver *)drvPvt;
