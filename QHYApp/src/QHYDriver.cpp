@@ -57,7 +57,7 @@ QHYDriver::QHYDriver(const char *portName, int maxBuffers, size_t maxMemory,
     //createParam adds the parameters to all param lists automatically (using maxAddr).
     createParam(QHYReadoutModeParamString,  asynParamInt32,    &QHYReadoutModeParam);
     createParam(QHYReadModeParamString,     asynParamInt32,    &QHYReadModeParam);
-    createParam(QHYOffsetParamString,       asynParamInt32,    &QHYOffsetParam);
+    createParam(QHYOffsetParamString,       asynParamFloat64,    &QHYOffsetParam);
     createParam(QHYBitDepthParamString,     asynParamInt32,    &QHYBitDepthParam);
     createParam(QHYPercentCompleteParamString, asynParamFloat64,  &QHYPercentCompleteParam);
     createParam(QHYTEPowerParamString,      asynParamFloat64,  &QHYTEPowerParam);

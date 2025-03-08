@@ -124,7 +124,7 @@ private:
     asynStatus setReadMode(int readMode);
 
 protected:
-    int ADOffset;
+    // int QHYOffset;
     int QHYReadoutModeParam;
     int QHYReadModeParam;
     int QHYBitDepthParam;
