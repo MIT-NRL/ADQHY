@@ -941,8 +941,8 @@ void QHYDriver::captureTask() {
         callParamCallbacks();
 
         // Wait until image has been acquired
-        while (GetQHYCCDExposureRemaining(cameraID) > 0 &&
-               !GetQHYCCDCameraStatus(cameraID, &exposureStatus)) {
+        while (GetQHYCCDExposureRemaining(cameraID) > 0) {
+
             this->unlock();
             bool s = this->stopEvent->wait(SHORT_WAIT);
             this->lock();
