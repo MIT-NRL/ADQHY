@@ -822,6 +822,23 @@ asynStatus QHYDriver::setReadMode(int readMode) {
         printf("GetQHYCCDEffectiveArea failure, error: %d\n", retVal);
     }
 
+    // Gain and offset need to be reset the InitQHYCCD function
+    double gain, offset;
+    getDoubleParam(ADGain, &gain);
+    getDoubleParam(QHYOffsetParam, &offset);
+
+    retVal = SetQHYCCDParam(cameraID, CONTROL_GAIN, (long)gain);
+    if (retVal != QHYCCD_SUCCESS) {
+        printf("SetQHYCCDParam CONTROL_GAIN failure, error: %d\n", retVal);
+        return asynError;
+    }
+
+    retVal = SetQHYCCDParam(cameraID, CONTROL_OFFSET, (long)offset);
+    if (retVal != QHYCCD_SUCCESS) {
+        printf("SetQHYCCDParam CONTROL_OFFSET failure, error: %d\n", retVal);
+        return asynError;
+    }
+
     status |= setIntegerParam(ADMinX, cameraInfo.effectiveStartX);
     status |= setIntegerParam(ADMinY, cameraInfo.effectiveStartY);
     status |= setIntegerParam(ADSizeX, cameraInfo.effectiveSizeX);
