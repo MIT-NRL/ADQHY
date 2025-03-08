@@ -112,18 +112,18 @@ record(mbbi, "$(P)$(R)BitDepth_RBV")
     field(SCAN, "I/O Intr")
 }
 
-record(longout, "$(P)$(R)Offset")
+record(ao, "$(P)$(R)Offset")
 {
-    field(DTYP,"asynInt32")
+    field(DTYP,"asynFloat64")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))QHY_OFFSET")
     field(PINI,"YES")
     field(VAL, "0")
     info(autosaveFields, "VAL")
 }
 
-record(longin, "$(P)$(R)Offset_RBV")
+record(ai, "$(P)$(R)Offset_RBV")
 {
-    field(DTYP,"asynInt32")
+    field(DTYP,"asynFloat64")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))QHY_OFFSET")
     field(SCAN, "I/O Intr")
 }
