@@ -566,7 +566,7 @@ asynStatus QHYDriver::connectCamera() {
     status |= setStringParam(ADManufacturer, "QHY");
     status |= setStringParam(ADModel, camId);
     status |= setStringParam(ADSerialNumber, "N/A");
-    status |= setStringParam(ADFirmwareVersion, "N/A");
+    status |= setStringParam(ADFirmwareVersion, reinterpret_cast<const char*>(FWInfo));
     status |= setStringParam(NDDriverVersion, driverVersion);
     status |= setStringParam(ADSDKVersion, versionStr);
 
