@@ -179,11 +179,17 @@ asynStatus QHYDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 value) {
         status |=
             SetQHYCCDParam(cameraID, CONTROL_EXPOSURE, exposureTime);
     } else if (function == ADGain) {
+        if (value > cameraInfo.maxGain) value = cameraInfo.maxGain;
+        printf("Setting gain to %f\n", value);
         status |=
-            SetQHYCCDParam(cameraID, CONTROL_GAIN, (long)value);
-    } else if (function == ADOffset) {
+            SetQHYCCDParam(cameraID, CONTROL_GAIN, value);
+        status |= setDoubleParam(ADGain, value);
+    } else if (function == QHYOffsetParam) {
+        if (value > cameraInfo.maxOffset) value = cameraInfo.maxOffset;
+        printf("Setting offset to %f\n", value);
         status |=
             SetQHYCCDParam(cameraID, CONTROL_OFFSET, (long)value);
+        status |= setDoubleParam(QHYOffsetParam, value);
     } else if (function == ADTemperature) {
         status |= ControlQHYCCDTemp(cameraID, value);
     }
@@ -395,6 +401,8 @@ asynStatus QHYDriver::connectCamera() {
             if (retVal == QHYCCD_SUCCESS) {
                 GetQHYCCDControlName(cameraID, item, paramName);
                 printf("%s:  min = %1f, max = %1f, step = %1f\n",paramName,item,min,max,step);
+                if (item == CONTROL_GAIN) cameraInfo.maxGain = max;
+                else if (item == CONTROL_OFFSET) cameraInfo.maxOffset = max;
             } else
                 printf("get param min/max/step fail\n");
         }

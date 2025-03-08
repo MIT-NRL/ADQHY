@@ -55,6 +55,9 @@ typedef struct _QHY_CAMERA_INFO {
     unsigned int maxImageSizeX;
     unsigned int maxImageSizeY;
 
+    unsigned int maxGain;
+    unsigned int maxOffset;
+
     bool IsCoolerCam;
     bool IsHumiditySensor;
 
