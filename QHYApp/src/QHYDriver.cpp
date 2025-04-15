@@ -152,6 +152,7 @@ asynStatus QHYDriver::writeInt32(asynUser *pasynUser, epicsInt32 value) {
     }
 
     if (function == QHYReadModeParam) {
+        printf("Setting read mode to %d\n", value);
         if (value > cameraInfo.numReadModes) {
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
                       "Read mode not supported\n");
@@ -180,13 +181,11 @@ asynStatus QHYDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 value) {
             SetQHYCCDParam(cameraID, CONTROL_EXPOSURE, exposureTime);
     } else if (function == ADGain) {
         if (value > cameraInfo.maxGain) value = cameraInfo.maxGain;
-        printf("Setting gain to %f\n", value);
         status |=
             SetQHYCCDParam(cameraID, CONTROL_GAIN, value);
         status |= setDoubleParam(ADGain, value);
     } else if (function == QHYOffsetParam) {
         if (value > cameraInfo.maxOffset) value = cameraInfo.maxOffset;
-        printf("Setting offset to %f\n", value);
         status |=
             SetQHYCCDParam(cameraID, CONTROL_OFFSET, (long)value);
         status |= setDoubleParam(QHYOffsetParam, value);
@@ -523,10 +522,15 @@ asynStatus QHYDriver::connectCamera() {
     printf("number of read modes: %d\n", cameraInfo.numReadModes);
 
     char modeName[80];
-    for (int i=0; i<cameraInfo.numReadModes; i++) {
+    for (int i = 0; i < cameraInfo.numReadModes; i++) {
         GetQHYCCDReadModeName(cameraID, i, modeName);
         printf("Name %d: %s\n", i, modeName);
+        
+        // Set the string for each state of the mbbo record
+        status |= setStringParam(QHYReadModeParam + i, modeName);
     }
+
+    callParamCallbacks(); // Update the param values
 
     /*
     //Read the frame sizes 
@@ -823,9 +827,10 @@ asynStatus QHYDriver::setReadMode(int readMode) {
     }
 
     // Gain and offset need to be reset the InitQHYCCD function
-    double gain, offset;
+    double gain, offset, exposureTime;
     getDoubleParam(ADGain, &gain);
     getDoubleParam(QHYOffsetParam, &offset);
+    getDoubleParam(ADAcquireTime, &exposureTime);
 
     retVal = SetQHYCCDParam(cameraID, CONTROL_GAIN, (long)gain);
     if (retVal != QHYCCD_SUCCESS) {
@@ -836,6 +841,12 @@ asynStatus QHYDriver::setReadMode(int readMode) {
     retVal = SetQHYCCDParam(cameraID, CONTROL_OFFSET, (long)offset);
     if (retVal != QHYCCD_SUCCESS) {
         printf("SetQHYCCDParam CONTROL_OFFSET failure, error: %d\n", retVal);
+        return asynError;
+    }
+
+    retVal = SetQHYCCDParam(cameraID, CONTROL_EXPOSURE, 1000*1000*exposureTime);
+    if (retVal != QHYCCD_SUCCESS) {
+        printf("SetQHYCCDParam CONTROL_EXPOSURE failure, error: %d\n", retVal);
         return asynError;
     }
 
@@ -940,17 +951,25 @@ void QHYDriver::captureTask() {
         }
         this->lock();
         
+        double gain, offset;
+        gain = GetQHYCCDParam(cameraID, CONTROL_GAIN);
+        offset = GetQHYCCDParam(cameraID, CONTROL_OFFSET);
+        asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DEVICE,
+                  "Camera gain: %.3f, offset: %.3f \n", gain, offset);
+
         retVal = ExpQHYCCDSingleFrame(cameraID);
         if (retVal != QHYCCD_SUCCESS) {
             // FAILED
             setIntegerParam(ADStatus, ADStatusError);
             callParamCallbacks();
-            printf("ExpQHYCCDSingleFrame failure, error: %d\n", retVal);
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+                "ExpQHYCCDSingleFrame failure, error: %d\n", retVal);
             setStringParam(ADStatusMessage, "ExpQHYCCDSingleFrame error.");
             continue;
         } else {
             // SUCCESS
-            printf("ExpQHYCCDSingleFrame success.\n");
+            asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DEVICE, 
+                "ExpQHYCCDSingleFrame success.\n");
             setStringParam(ADStatusMessage, "Waiting for exposure");
         }
 
@@ -959,6 +978,18 @@ void QHYDriver::captureTask() {
 
         // Wait until image has been acquired
         while (GetQHYCCDExposureRemaining(cameraID) > 0) {
+
+            GetQHYCCDCameraStatus(cameraID, &exposureStatus);
+            if (exposureStatus != QHYCCD_SUCCESS) {
+                // ERROR
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                          "%s:%s: Exposure failed with status %d\n", driverName,
+                          __func__, exposureStatus);
+
+                setIntegerParam(ADStatus, ADStatusError);
+                callParamCallbacks();
+                break;
+            }
 
             this->unlock();
             bool s = this->stopEvent->wait(SHORT_WAIT);
@@ -1011,14 +1042,12 @@ void QHYDriver::captureTask() {
                                                    0, NULL);
             // }
             
-            printf("Data size: %d\n", dataSize);
-            printf("Image size: %d\n", pImage->dataSize);
+            asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DEVICE,
+                "Data size: %d, Image size: %d, bpp: %d\n", dataSize, pImage->dataSize, bpp);
 
             pImage->uniqueId = imageCounter;
             pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
             updateTimeStamp(&pImage->epicsTS);
-
-            printf("bpp: %d\n", bpp);
 
             GetQHYCCDSingleFrame(cameraID, (uint32_t*)&roiFormat.imgWidth,
                             (uint32_t*)&roiFormat.imgHeight, (uint32_t*)&bpp, &channels, (unsigned char *)pImage->pData);
