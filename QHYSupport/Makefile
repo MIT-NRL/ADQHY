@@ -7,22 +7,19 @@ include $(TOP)/configure/CONFIG
 # The files in this directory were manually copied from the QHY SDK directories
 # for Linux.
 
-ifneq (, $(filter $(OS_CLASS), Linux))
-INC += qhyccd.h
-INC += qhyccderr.h
-INC += qhyccdcamdef.h
-INC += qhyccdstruct.h
-INC += config.h
-endif
+# ifneq (, $(filter $(OS_CLASS), Linux))
+# INC += qhyccd.h
+# INC += qhyccderr.h
+# INC += qhyccdcamdef.h
+# INC += qhyccdstruct.h
+# INC += config.h
+# endif
 
-# Installs version 24.1.9.12
-# LIB_INSTALLS_Linux += ../os/linux-x86_64/v24.1.9.12/libqhyccd.so.24.1.9.12
-# LIB_INSTALLS_Linux += ../os/linux-x86_64/v24.1.9.12/libqhyccd.so.20
-# LIB_INSTALLS_Linux += ../os/linux-x86_64/v24.1.9.12/libqhyccd.so
+# LIB_INSTALLS_Linux += ../os/linux-x86_64/v24.12.27/libqhyccd.so.24.12.27.9
 
-#LIB_INSTALLS_Linux += ../os/linux-aarch64/v24.1.9.12/libqhyccd.so.24.1.9.12
-LIB_INSTALLS_Linux += ../os/linux-aarch64/v24.1.9.12/libqhyccd.so.20
-LIB_INSTALLS_Linux += ../os/linux-aarch64/v24.1.9.12/libqhyccd.so
+# LIB_INSTALLS_Linux += ../os/linux-aarch64/v24.1.9.12/libqhyccd.so.24.1.9.12
+# LIB_INSTALLS_Linux += ../os/linux-aarch64/v24.1.9.12/libqhyccd.so.20
+# LIB_INSTALLS_Linux += ../os/linux-aarch64/v24.1.9.12/libqhyccd.so
 
 # Installs version 21.8.26.16
 # LIB_INSTALLS_Linux += ../os/linux-x86_64/v21.8.26.16/libqhyccd.so.21.8.26.16
