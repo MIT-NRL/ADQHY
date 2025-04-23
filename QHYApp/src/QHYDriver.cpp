@@ -749,8 +749,8 @@ asynStatus QHYDriver::setROIFormat(ROIFormat_t *out) {
         status |= setIntegerParam(ADSizeY, sizeY);
     }
 
-    imgWidth = (sizeX - minX) / binX;
-    imgHeight = (sizeY - minY) / binY;
+    imgWidth = minX / binX;
+    imgHeight = minY / binY;
     startX = minX / binX;
     startY = minY / binY;
 
